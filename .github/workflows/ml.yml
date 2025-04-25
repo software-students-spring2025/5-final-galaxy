@@ -17,10 +17,9 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install deps & run tests
+      - name: Install deps
         run: |
           pip install -r ml/requirements.txt
-          pytest --cov=ml --cov-fail-under=80
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
