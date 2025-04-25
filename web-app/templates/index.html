@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stock Sentiment Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+    <h1 class="text-2xl font-bold mb-4 text-center">📈 Stock Sentiment</h1>
+
+    <form id="ticker-form" class="flex gap-2 mb-4">
+      <input
+        type="text"
+        id="ticker-input"
+        placeholder="Enter ticker (e.g., TSLA)"
+        class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <button
+        type="submit"
+        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+      >
+        Analyze
+      </button>
+    </form>
+      <!-- Connectivity Check -->
+  <button
+    id="check-btn"
+    class="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600 mb-4"
+  >
+    Check Connectivity
+  </button>
+  <div id="health-status" class="text-center text-gray-700 mb-4"></div>
+
+    <div id="loading" class="text-center text-gray-500 hidden">Loading…</div>
+    <div id="results" class="space-y-4"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('ticker-form');
+    const input = document.getElementById('ticker-input');
+    const resultsDiv = document.getElementById('results');
+    const loadingDiv = document.getElementById('loading');
+
+    const checkBtn = document.getElementById('check-btn');
+    const healthDiv = document.getElementById('health-status');
+
+    checkBtn.addEventListener('click', async () => {
+      healthDiv.textContent = 'Checking connectivity…';
+      try {
+        const resp = await fetch('/healthz');
+        if (!resp.ok) throw new Error(`Status ${resp.status}`);
+        const data = await resp.json();
+        healthDiv.textContent = `OK — status: ${data.status}, mongo: ${data.mongo}`;
+      } catch (err) {
+        healthDiv.textContent = `Error: ${err.message}`;
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const ticker = input.value.trim().toUpperCase();
+      if (!ticker) return;
+
+      resultsDiv.innerHTML = '';
+      loadingDiv.classList.remove('hidden');
+
+      try {
+        const resp = await fetch(`/analyze/${ticker}`);
+        if (!resp.ok) throw new Error('Network response was not ok');
+        const data = await resp.json();
+
+        loadingDiv.classList.add('hidden');
+        const { sentiment_score, news } = data;
+
+        const card = document.createElement('div');
+        card.innerHTML = `
+          <h2 class="text-xl font-semibold">Sentiment Score: ${sentiment_score.toFixed(2)}</h2>
+          <ul class="list-disc pl-5 mt-2">
+            ${news.map(item => `
+              <li class="mb-4">
+                <h3 class="font-medium">${item.title}</h3>
+                <p class="text-gray-600">${item.summary}</p>
+              </li>
+            `).join('')}
+          </ul>
+        `;
+        resultsDiv.appendChild(card);
+
+      } catch (err) {
+        loadingDiv.classList.add('hidden');
+        resultsDiv.innerHTML = `<p class="text-red-500">Error: ${err.message}</p>`;
+      }
+    });
+  </script>
+</body>
+</html>
