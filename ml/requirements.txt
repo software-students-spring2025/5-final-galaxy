@@ -1,0 +1,8 @@
+# ml/requirements.txt
+fastapi
+uvicorn
+pymongo
+openai
+langchain
+pytest
+pytest-cov
