@@ -19,7 +19,7 @@ jobs:
 
       - name: Install deps & run tests
         run: |
-          pip install -r web-app/requirements.txt -r web-app/requirements-dev.txt
+          pip install -r web-app/requirements.txt
           pytest --cov=web_app --cov-fail-under=80
 
       - name: Set up Docker Buildx

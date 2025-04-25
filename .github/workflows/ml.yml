@@ -19,7 +19,7 @@ jobs:
 
       - name: Install deps & run tests
         run: |
-          pip install -r ml/requirements.txt -r ml/requirements-dev.txt
+          pip install -r ml/requirements.txt
           pytest --cov=ml --cov-fail-under=80
 
       - name: Set up Docker Buildx
