@@ -1,10 +1,11 @@
 # web-app/app.py
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 import os, requests
 from common.models import MongoDBConnection, ArticleModel
 from pymongo.errors import PyMongoError
+from typing import Optional
 
 app = FastAPI()
 
@@ -24,6 +25,13 @@ async def get_dashboard(request: Request):
     Render the index.html template on GET /
     """
     return templates.TemplateResponse("index.html", {"request": request})
+
+@app.get("/trending", response_class=HTMLResponse)
+async def get_trending_page(request: Request):
+    """
+    Render the trending.html template on GET /trending
+    """
+    return templates.TemplateResponse("trending.html", {"request": request})
 
 @app.post("/analyze/{ticker}")
 async def trigger_analysis(ticker: str):
@@ -56,6 +64,32 @@ async def get_articles(ticker: str):
         formatted_articles = [ArticleModel.format_article(article) for article in articles]
         
         return {"ticker": ticker, "articles": formatted_articles}
+    except PyMongoError as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+@app.get("/api/trending")
+async def get_trending_articles(time_range: Optional[str] = Query(None, description="Time range: 24h, 7d, 30d")):
+    """
+    Get trending articles from the database based on time range.
+    Default returns the newest 10 articles.
+    """
+    try:
+        # Validate time_range parameter
+        valid_ranges = [None, "24h", "7d", "30d"]
+        if time_range not in valid_ranges:
+            raise HTTPException(status_code=400, detail=f"Invalid time_range. Must be one of: {', '.join(str(r) for r in valid_ranges if r)}")
+        
+        # Get trending articles from MongoDB
+        articles = ArticleModel.get_trending_articles(
+            collection=articles_collection,
+            time_range=time_range,
+            limit=10
+        )
+        
+        # Format articles for the response
+        formatted_articles = [ArticleModel.format_article(article) for article in articles]
+        
+        return {"time_range": time_range, "articles": formatted_articles}
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 

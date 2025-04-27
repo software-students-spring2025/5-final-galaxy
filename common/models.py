@@ -3,7 +3,7 @@ Module for MongoDB models & connection.
 """
 
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from pymongo import MongoClient, ASCENDING, DESCENDING
 from pymongo.collection import Collection
 from pymongo.database import Database
@@ -72,3 +72,41 @@ class ArticleModel:
             article["created_at"] = article["created_at"].isoformat()
             
         return article
+        
+    @staticmethod
+    def get_trending_articles(collection: Collection, time_range: str = None, limit: int = 10) -> list:
+        """
+        Get recent articles based on time range
+        
+        Args:
+            collection: MongoDB collection to query
+            time_range: One of "24h", "7d", "30d" or None (for all)
+            limit: Maximum number of articles to return (default 10)
+        
+        Returns:
+            List of articles sorted by creation date (most recent first)
+        """
+        query = {}
+        
+        # Apply time filter if specified
+        if time_range:
+            current_time = datetime.utcnow()
+            
+            if time_range == "24h":
+                since = current_time - timedelta(hours=24)
+            elif time_range == "7d":
+                since = current_time - timedelta(days=7)
+            elif time_range == "30d":
+                since = current_time - timedelta(days=30)
+            else:
+                since = None
+                
+            if since:
+                query["created_at"] = {"$gte": since}
+        
+        # Execute query sorted by time (newest first) with limit
+        return list(
+            collection.find(query)
+            .sort("created_at", DESCENDING)
+            .limit(limit)
+        )
