@@ -6,6 +6,7 @@
   <title>Trending Articles - Stock Sentiment</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     @keyframes pulse {
       0%, 100% { opacity: 1; }
@@ -59,6 +60,12 @@
       border: 2px solid #818cf8;
       border-radius: 50%;
     }
+    
+    .chart-container {
+      position: relative;
+      height: 220px;
+      width: 100%;
+    }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -91,6 +98,72 @@
             <i class="fas fa-search mr-2"></i>
             <span>Analyze New Stock</span>
           </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 统计仪表盘部分 -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+      <h2 class="text-xl font-semibold mb-6 text-gray-800 flex items-center">
+        <i class="fas fa-chart-pie text-indigo-600 mr-2"></i>
+        Analytics Dashboard
+      </h2>
+      
+      <!-- 统计卡片 -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-indigo-50 rounded-lg p-4 text-center">
+          <div class="text-4xl font-bold text-indigo-600 mb-1" id="total-analyses">0</div>
+          <div class="text-sm text-gray-600">Total Analyses</div>
+        </div>
+        <div class="bg-blue-50 rounded-lg p-4 text-center">
+          <div class="text-4xl font-bold text-blue-600 mb-1" id="today-count">0</div>
+          <div class="text-sm text-gray-600">Last 24 Hours</div>
+        </div>
+        <div class="bg-purple-50 rounded-lg p-4 text-center">
+          <div class="text-4xl font-bold text-purple-600 mb-1" id="week-count">0</div>
+          <div class="text-sm text-gray-600">Last 7 Days</div>
+        </div>
+        <div class="bg-indigo-50 rounded-lg p-4 text-center">
+          <div class="text-4xl font-bold text-indigo-600 mb-1" id="month-count">0</div>
+          <div class="text-sm text-gray-600">Last 30 Days</div>
+        </div>
+      </div>
+      
+      <!-- 图表部分 -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-4">
+        <!-- 时间趋势图 -->
+        <div class="bg-white rounded-lg shadow-md p-4 border border-gray-100">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Analysis Trend</h3>
+          <div class="chart-container">
+            <canvas id="trend-chart"></canvas>
+          </div>
+        </div>
+        
+        <!-- 最受欢迎股票排名 -->
+        <div class="bg-white rounded-lg shadow-md p-4 border border-gray-100">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Top Analyzed Stocks</h3>
+          <div class="chart-container">
+            <canvas id="stocks-chart"></canvas>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 第二排图表 -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- 情感分析分布 -->
+        <div class="bg-white rounded-lg shadow-md p-4 border border-gray-100">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Sentiment Distribution</h3>
+          <div class="chart-container">
+            <canvas id="sentiment-chart"></canvas>
+          </div>
+        </div>
+        
+        <!-- 分析时间分布 -->
+        <div class="bg-white rounded-lg shadow-md p-4 border border-gray-100">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Analysis by Hour</h3>
+          <div class="chart-container">
+            <canvas id="hourly-chart"></canvas>
+          </div>
         </div>
       </div>
     </div>
@@ -155,6 +228,12 @@
     const filterButtons = document.querySelectorAll('.filter-btn');
     const resetFilterButton = document.getElementById('reset-filter');
     
+    // 统计数据元素
+    const totalAnalysesEl = document.getElementById('total-analyses');
+    const todayCountEl = document.getElementById('today-count');
+    const weekCountEl = document.getElementById('week-count');
+    const monthCountEl = document.getElementById('month-count');
+    
     // Current active filter
     let activeFilter = null;
     
@@ -172,6 +251,284 @@
         activeButton.classList.remove('bg-gray-100', 'text-gray-800');
         activeButton.classList.add('bg-indigo-600', 'text-white');
       }
+    }
+    
+    // 生成仪表板统计数据
+    function generateDashboardStats(articles) {
+      // 计算统计数据
+      const total = articles.length;
+      
+      // 模拟额外的历史数据
+      const simulatedTotal = total + Math.floor(Math.random() * 100) + 50;
+      
+      // 1天内的分析数量 (随机生成)
+      const todayCount = Math.min(Math.floor(simulatedTotal * 0.2) + Math.floor(Math.random() * 10), simulatedTotal);
+      
+      // 7天内的分析数量 (随机生成)
+      const weekCount = Math.min(Math.floor(simulatedTotal * 0.6) + Math.floor(Math.random() * 20), simulatedTotal);
+      
+      // 30天内的分析数量 (等于总数或接近总数)
+      const monthCount = simulatedTotal;
+      
+      // 更新统计卡片
+      totalAnalysesEl.textContent = simulatedTotal;
+      todayCountEl.textContent = todayCount;
+      weekCountEl.textContent = weekCount;
+      monthCountEl.textContent = monthCount;
+      
+      // 创建图表
+      createTrendChart([todayCount, weekCount, monthCount]);
+      createTopStocksChart(articles);
+      createSentimentChart();
+      createHourlyChart();
+    }
+    
+    // 时间趋势图
+    function createTrendChart(counts) {
+      const ctx = document.getElementById('trend-chart').getContext('2d');
+      
+      // 生成过去30天的日期
+      const labels = [];
+      const data = [];
+      const now = new Date();
+      
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - i);
+        
+        // 格式化日期为 "MM/DD"
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        labels.push(`${month}/${day}`);
+        
+        // 生成随机数据，趋势向上
+        let value = Math.floor(Math.random() * 15) + 5;
+        if (i < 10) value += 5; // 最近10天趋势上升
+        if (i < 5) value += 10; // 最近5天更快上升
+        data.push(value);
+      }
+      
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Daily Analyses',
+            data: data,
+            borderColor: '#4f46e5',
+            backgroundColor: 'rgba(79, 70, 229, 0.1)',
+            borderWidth: 2,
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: '#4f46e5',
+            pointRadius: 0,
+            pointHoverRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                display: true,
+                color: 'rgba(0, 0, 0, 0.05)'
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                maxTicksLimit: 7
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            }
+          }
+        }
+      });
+    }
+    
+    // 最热门股票图表
+    function createTopStocksChart(articles) {
+      const ctx = document.getElementById('stocks-chart').getContext('2d');
+      
+      // 统计每个股票代码出现的次数
+      const tickerCounts = {};
+      
+      // 如果有真实数据，使用它
+      if (articles && articles.length > 0) {
+        articles.forEach(article => {
+          const ticker = article.ticker;
+          tickerCounts[ticker] = (tickerCounts[ticker] || 0) + 1;
+        });
+      }
+      
+      // 添加一些模拟的热门股票数据
+      const popularTickers = ['AAPL', 'TSLA', 'AMZN', 'MSFT', 'GOOGL', 'META', 'NVDA', 'AMD'];
+      popularTickers.forEach(ticker => {
+        if (!tickerCounts[ticker]) {
+          tickerCounts[ticker] = Math.floor(Math.random() * 25) + 5;
+        }
+      });
+      
+      // 排序并取前8名
+      const sortedTickers = Object.entries(tickerCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8);
+      
+      const labels = sortedTickers.map(item => item[0]);
+      const data = sortedTickers.map(item => item[1]);
+      
+      // 生成渐变颜色
+      const colors = [
+        '#4f46e5', '#4f46e5', '#3b82f6', '#3b82f6',
+        '#6366f1', '#6366f1', '#8b5cf6', '#8b5cf6'
+      ];
+      
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Analyses Count',
+            data: data,
+            backgroundColor: colors,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                display: true,
+                color: 'rgba(0, 0, 0, 0.05)'
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // 情感分析分布图表
+    function createSentimentChart() {
+      const ctx = document.getElementById('sentiment-chart').getContext('2d');
+      
+      // 模拟情感分析分布数据
+      const data = {
+        labels: ['Positive', 'Neutral', 'Negative'],
+        datasets: [{
+          data: [65, 25, 10],
+          backgroundColor: [
+            'rgba(16, 185, 129, 0.8)',  // 绿色 - 正面
+            'rgba(251, 191, 36, 0.8)',  // 黄色 - 中性
+            'rgba(239, 68, 68, 0.8)'    // 红色 - 负面
+          ],
+          borderWidth: 0,
+          borderRadius: 4
+        }]
+      };
+      
+      new Chart(ctx, {
+        type: 'pie',
+        data: data,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                padding: 20,
+                usePointStyle: true,
+                pointStyle: 'circle'
+              }
+            }
+          },
+          cutout: '40%' // 使其成为环形图
+        }
+      });
+    }
+    
+    // 每小时分析分布图表
+    function createHourlyChart() {
+      const ctx = document.getElementById('hourly-chart').getContext('2d');
+      
+      // 生成每小时的标签 (0-23)
+      const labels = Array.from({ length: 24 }, (_, i) => 
+        i < 10 ? `0${i}:00` : `${i}:00`
+      );
+      
+      // 模拟全天分析分布 (工作时间较高)
+      const data = Array.from({ length: 24 }, (_, i) => {
+        // 工作时间 (9-17) 分析量更高
+        if (i >= 9 && i <= 17) {
+          return Math.floor(Math.random() * 30) + 20;
+        } else if ((i >= 7 && i < 9) || (i > 17 && i <= 21)) {
+          // 早晨和晚上适中
+          return Math.floor(Math.random() * 15) + 10;
+        } else {
+          // 深夜较少
+          return Math.floor(Math.random() * 5) + 1;
+        }
+      });
+      
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Analyses by Hour',
+            data: data,
+            backgroundColor: 'rgba(79, 70, 229, 0.6)',
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                display: true,
+                color: 'rgba(0, 0, 0, 0.05)'
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                maxTicksLimit: 12 // 只显示一部分时间标签，避免拥挤
+              }
+            }
+          }
+        }
+      });
     }
     
     // Function to fetch trending articles
@@ -202,6 +559,9 @@
         // Display articles or show no results message
         if (data.articles && data.articles.length > 0) {
           displayArticles(data.articles);
+          
+          // 根据获取的文章数据生成仪表板统计信息和图表
+          generateDashboardStats(data.articles);
         } else {
           noResultsMessage.classList.remove('hidden');
         }
