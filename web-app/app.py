@@ -1,6 +1,6 @@
 # web-app/app.py
 from fastapi import FastAPI, Request, HTTPException, Query
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import os, requests
 from common.models import MongoDBConnection, ArticleModel
@@ -33,11 +33,23 @@ async def get_trending_page(request: Request):
     """
     return templates.TemplateResponse("trending.html", {"request": request})
 
+@app.get("/detail", response_class=HTMLResponse)
+async def get_detail_page(request: Request, ticker: str = None):
+    """
+    Render the detail.html template on GET /detail
+    """
+    if not ticker:
+        # Redirect to home if no ticker provided
+        return RedirectResponse(url="/")
+    
+    return templates.TemplateResponse("detail.html", {"request": request})
+
 @app.post("/analyze/{ticker}")
 async def trigger_analysis(ticker: str):
     """
     Trigger ML service to analyze the ticker.
-    This doesn't return the results, just triggers the process.
+    This doesn't return results directly, just triggers the process 
+    and returns an appropriate response to guide the user to the detail page.
     """
     try:
         # Send the analysis request to the ML service
@@ -45,8 +57,13 @@ async def trigger_analysis(ticker: str):
         if resp.status_code != 202:
             raise HTTPException(status_code=502, detail="ML service error")
         
-        # Return the status message from ML service
-        return resp.json()
+        # Return the status message and ticker for redirection
+        return {
+            "status": "queued",
+            "message": f"Analysis for {ticker} has been initiated",
+            "ticker": ticker,
+            "redirect_to": f"/detail?ticker={ticker}"
+        }
     except requests.RequestException as e:
         raise HTTPException(status_code=502, detail=f"ML service request failed: {str(e)}")
 
