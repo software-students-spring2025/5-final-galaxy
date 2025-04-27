@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Trending Articles - Stock Sentiment</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div class="container mx-auto px-4 py-8">
+    <!-- Header with Navigation -->
+    <header class="mb-8">
+      <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold">📈 Stock Sentiment Trending</h1>
+        <nav>
+          <ul class="flex space-x-6">
+            <li><a href="/" class="text-blue-600 hover:text-blue-800">Home</a></li>
+            <li><a href="/trending" class="text-blue-600 hover:text-blue-800 font-bold border-b-2 border-blue-600">Trending</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Filter Controls -->
+    <div class="bg-white p-4 rounded-lg shadow-md mb-6">
+      <div class="flex flex-col sm:flex-row sm:items-center">
+        <h2 class="text-xl font-semibold mb-2 sm:mb-0 sm:mr-4">Filter by time:</h2>
+        <div class="flex space-x-2">
+          <button id="filter-all" class="filter-btn bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            All
+          </button>
+          <button id="filter-24h" class="filter-btn bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300">
+            24 Hours
+          </button>
+          <button id="filter-7d" class="filter-btn bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300">
+            7 Days
+          </button>
+          <button id="filter-30d" class="filter-btn bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300">
+            30 Days
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loading" class="text-center py-8 hidden">
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
+      <p class="text-gray-500">Loading trending articles...</p>
+    </div>
+
+    <!-- Articles Container -->
+    <div id="articles-container" class="space-y-4"></div>
+    
+    <!-- No Results Message -->
+    <div id="no-results" class="hidden text-center py-8 text-gray-500">
+      No articles found for the selected time period.
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const articlesContainer = document.getElementById('articles-container');
+    const loadingIndicator = document.getElementById('loading');
+    const noResultsMessage = document.getElementById('no-results');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    
+    // Current active filter
+    let activeFilter = null;
+    
+    // Function to set active filter button
+    function setActiveFilter(filterId) {
+      // Reset all buttons
+      filterButtons.forEach(btn => {
+        btn.classList.remove('bg-blue-600', 'text-white');
+        btn.classList.add('bg-gray-200', 'text-gray-800');
+      });
+      
+      // Set active button
+      const activeButton = document.getElementById(filterId);
+      if (activeButton) {
+        activeButton.classList.remove('bg-gray-200', 'text-gray-800');
+        activeButton.classList.add('bg-blue-600', 'text-white');
+      }
+    }
+    
+    // Function to fetch trending articles
+    async function fetchTrendingArticles(timeRange = null) {
+      // Show loading indicator
+      articlesContainer.innerHTML = '';
+      loadingIndicator.classList.remove('hidden');
+      noResultsMessage.classList.add('hidden');
+      
+      try {
+        // Build query URL
+        let url = '/api/trending';
+        if (timeRange) {
+          url += `?time_range=${timeRange}`;
+        }
+        
+        // Fetch data
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Error: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        // Hide loading indicator
+        loadingIndicator.classList.add('hidden');
+        
+        // Display articles or show no results message
+        if (data.articles && data.articles.length > 0) {
+          displayArticles(data.articles);
+        } else {
+          noResultsMessage.classList.remove('hidden');
+        }
+      } catch (error) {
+        console.error('Error fetching trending articles:', error);
+        loadingIndicator.classList.add('hidden');
+        articlesContainer.innerHTML = `
+          <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            Error loading articles: ${error.message}
+          </div>
+        `;
+      }
+    }
+    
+    // Function to display articles
+    function displayArticles(articles) {
+      articlesContainer.innerHTML = '';
+      
+      articles.forEach(article => {
+        const date = new Date(article.created_at);
+        const formattedDate = date.toLocaleString();
+        
+        const articleElement = document.createElement('div');
+        articleElement.className = 'bg-white rounded-lg shadow-md p-6 mb-4';
+        articleElement.innerHTML = `
+          <div class="flex justify-between items-start">
+            <h3 class="text-xl font-semibold mb-2">${article.title}</h3>
+            <span class="text-sm text-gray-500 ml-2">
+              ${article.ticker}
+            </span>
+          </div>
+          <p class="text-gray-600 mb-4">${article.summary}</p>
+          <div class="text-gray-800 mb-4">${article.body}</div>
+          <div class="text-sm text-gray-500">
+            Published: ${formattedDate}
+          </div>
+        `;
+        
+        articlesContainer.appendChild(articleElement);
+      });
+    }
+    
+    // Add event listeners to filter buttons
+    document.getElementById('filter-all').addEventListener('click', () => {
+      setActiveFilter('filter-all');
+      fetchTrendingArticles();
+    });
+    
+    document.getElementById('filter-24h').addEventListener('click', () => {
+      setActiveFilter('filter-24h');
+      fetchTrendingArticles('24h');
+    });
+    
+    document.getElementById('filter-7d').addEventListener('click', () => {
+      setActiveFilter('filter-7d');
+      fetchTrendingArticles('7d');
+    });
+    
+    document.getElementById('filter-30d').addEventListener('click', () => {
+      setActiveFilter('filter-30d');
+      fetchTrendingArticles('30d');
+    });
+    
+    // Fetch all articles on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      setActiveFilter('filter-all');
+      fetchTrendingArticles();
+    });
+  </script>
+</body>
+</html> 
