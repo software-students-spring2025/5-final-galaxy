@@ -4,7 +4,7 @@ from common.models import MongoDBConnection, ArticleModel
 from pymongo.errors import PyMongoError
 import os
 import time
-from typing import Dict
+from typing import Dict, Optional
 from fastapi.responses import JSONResponse
 
 app = FastAPI()
@@ -13,10 +13,14 @@ conn = MongoDBConnection()
 articles_collection = conn.get_collection("articles")
 
 @app.post("/analyze/{ticker}")
-async def analyze(ticker: str) -> Dict:
+async def analyze(ticker: str, user_id: Optional[str] = None) -> Dict:
     """
     Process an analysis request for a stock ticker.
     Includes a 10 second delay to simulate processing time.
+    
+    Args:
+        ticker: Stock ticker symbol
+        user_id: Optional user ID who requested the analysis
     """
     try:
         # Sleep for 10 seconds to simulate processing time
@@ -43,7 +47,8 @@ async def analyze(ticker: str) -> Dict:
                 ticker=ticker,
                 title=article_data["title"],
                 summary=article_data["summary"],
-                body=article_data["body"]
+                body=article_data["body"],
+                user_id=user_id  # 添加用户ID
             )
             result = articles_collection.insert_one(article)
             inserted_ids.append(str(result.inserted_id))
@@ -56,7 +61,8 @@ async def analyze(ticker: str) -> Dict:
                 "message": f"Analysis for {ticker} is complete",
                 "ticker": ticker,
                 "article_count": len(inserted_ids),
-                "article_ids": inserted_ids
+                "article_ids": inserted_ids,
+                "user_id": user_id  # 在响应中包含用户ID
             }
         )
         

@@ -77,12 +77,37 @@
           <span class="text-indigo-600 mr-2">📈</span>
           <span>Stock Sentiment</span>
         </h1>
-        <nav>
-          <ul class="flex space-x-6">
-            <li><a href="/" class="text-indigo-600 hover:text-indigo-800">Home</a></li>
-            <li><a href="/trending" class="text-indigo-600 hover:text-indigo-800 font-bold border-b-2 border-indigo-600">Trending</a></li>
-          </ul>
-        </nav>
+        <div class="flex items-center">
+          <nav class="mr-6">
+            <ul class="flex space-x-6">
+              <li><a href="/" class="text-indigo-600 hover:text-indigo-800">Home</a></li>
+              <li><a href="/trending" class="text-indigo-600 hover:text-indigo-800 font-bold border-b-2 border-indigo-600">Trending</a></li>
+            </ul>
+          </nav>
+          <!-- User Authentication Links -->
+          <div>
+            {% if user %}
+            <div class="flex items-center">
+              <span class="text-gray-600 mr-3">
+                <i class="fas fa-user-circle text-indigo-600 mr-1"></i>
+                {{ user.username }}
+              </span>
+              <a href="/logout" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-1 rounded-lg text-sm transition-colors">
+                Logout
+              </a>
+            </div>
+            {% else %}
+            <div class="flex space-x-2">
+              <a href="/login" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-1 rounded-lg text-sm transition-colors">
+                Login
+              </a>
+              <a href="/register" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1 rounded-lg text-sm transition-colors">
+                Register
+              </a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
       </div>
     </header>
 
@@ -94,10 +119,18 @@
           <p class="text-lg opacity-90">Discover the latest stock sentiment trends and analyses</p>
         </div>
         <div class="mt-4 md:mt-0">
+          <!-- Show login prompt or analyze button based on authentication -->
+          {% if user %}
           <a href="/" class="bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-200 rounded-lg px-5 py-2 flex items-center">
             <i class="fas fa-search mr-2"></i>
             <span>Analyze New Stock</span>
           </a>
+          {% else %}
+          <a href="/login?next=/" class="bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-200 rounded-lg px-5 py-2 flex items-center">
+            <i class="fas fa-lock mr-2"></i>
+            <span>Login to Analyze</span>
+          </a>
+          {% endif %}
         </div>
       </div>
     </div>

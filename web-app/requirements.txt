@@ -6,3 +6,5 @@ jinja2
 pytest
 pytest-cov
 pymongo
+python-multipart
+httpx
