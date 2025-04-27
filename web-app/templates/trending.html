@@ -5,37 +5,118 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Trending Articles - Stock Sentiment</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <style>
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .animate-pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    .bg-gradient {
+      background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+    }
+    
+    .card-hover {
+      transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .ticker-badge {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      font-weight: bold;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .filter-button {
+      transition: all 0.3s ease;
+    }
+    
+    .article-date {
+      position: relative;
+      padding-left: 20px;
+    }
+    
+    .article-date:before {
+      content: "";
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: #e0e7ff;
+      border: 2px solid #818cf8;
+      border-radius: 50%;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-50 min-h-screen">
   <div class="container mx-auto px-4 py-8">
     <!-- Header with Navigation -->
     <header class="mb-8">
       <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold">📈 Stock Sentiment Trending</h1>
+        <h1 class="text-3xl font-bold flex items-center">
+          <span class="text-indigo-600 mr-2">📈</span>
+          <span>Stock Sentiment</span>
+        </h1>
         <nav>
           <ul class="flex space-x-6">
-            <li><a href="/" class="text-blue-600 hover:text-blue-800">Home</a></li>
-            <li><a href="/trending" class="text-blue-600 hover:text-blue-800 font-bold border-b-2 border-blue-600">Trending</a></li>
+            <li><a href="/" class="text-indigo-600 hover:text-indigo-800">Home</a></li>
+            <li><a href="/trending" class="text-indigo-600 hover:text-indigo-800 font-bold border-b-2 border-indigo-600">Trending</a></li>
           </ul>
         </nav>
       </div>
     </header>
 
+    <!-- Page Header -->
+    <div class="bg-gradient text-white rounded-xl shadow-lg p-8 mb-8">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div>
+          <h2 class="text-3xl md:text-4xl font-bold mb-2">Trending Analysis</h2>
+          <p class="text-lg opacity-90">Discover the latest stock sentiment trends and analyses</p>
+        </div>
+        <div class="mt-4 md:mt-0">
+          <a href="/" class="bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-200 rounded-lg px-5 py-2 flex items-center">
+            <i class="fas fa-search mr-2"></i>
+            <span>Analyze New Stock</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
     <!-- Filter Controls -->
-    <div class="bg-white p-4 rounded-lg shadow-md mb-6">
-      <div class="flex flex-col sm:flex-row sm:items-center">
-        <h2 class="text-xl font-semibold mb-2 sm:mb-0 sm:mr-4">Filter by time:</h2>
-        <div class="flex space-x-2">
-          <button id="filter-all" class="filter-btn bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-            All
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+      <div class="flex flex-col sm:flex-row justify-between items-center">
+        <h2 class="text-xl font-semibold mb-4 sm:mb-0 text-gray-800 flex items-center">
+          <i class="fas fa-filter text-indigo-600 mr-2"></i>
+          Filter by time:
+        </h2>
+        <div class="flex flex-wrap gap-2">
+          <button id="filter-all" class="filter-btn filter-button bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center">
+            <i class="fas fa-infinity mr-2"></i>
+            All Time
           </button>
-          <button id="filter-24h" class="filter-btn bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300">
+          <button id="filter-24h" class="filter-btn filter-button bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center">
+            <i class="far fa-clock mr-2"></i>
             24 Hours
           </button>
-          <button id="filter-7d" class="filter-btn bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300">
+          <button id="filter-7d" class="filter-btn filter-button bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center">
+            <i class="far fa-calendar-alt mr-2"></i>
             7 Days
           </button>
-          <button id="filter-30d" class="filter-btn bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300">
+          <button id="filter-30d" class="filter-btn filter-button bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center">
+            <i class="far fa-calendar-check mr-2"></i>
             30 Days
           </button>
         </div>
@@ -43,17 +124,26 @@
     </div>
 
     <!-- Loading Indicator -->
-    <div id="loading" class="text-center py-8 hidden">
-      <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
-      <p class="text-gray-500">Loading trending articles...</p>
+    <div id="loading" class="text-center py-12 hidden">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-[3px] border-indigo-600 border-t-transparent mb-4"></div>
+      <p class="text-gray-600 text-lg">Loading trending articles...</p>
     </div>
 
     <!-- Articles Container -->
-    <div id="articles-container" class="space-y-4"></div>
+    <div id="articles-container" class="space-y-6"></div>
     
     <!-- No Results Message -->
-    <div id="no-results" class="hidden text-center py-8 text-gray-500">
-      No articles found for the selected time period.
+    <div id="no-results" class="hidden py-16 text-center">
+      <div class="bg-indigo-50 rounded-xl p-8 max-w-lg mx-auto">
+        <div class="bg-indigo-100 rounded-full h-20 w-20 flex items-center justify-center mx-auto mb-6">
+          <i class="fas fa-search text-indigo-600 text-2xl"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">No Articles Found</h3>
+        <p class="text-gray-600 mb-6">No articles found for the selected time period. Try adjusting your filter or check back later.</p>
+        <button id="reset-filter" class="bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+          Show All Articles
+        </button>
+      </div>
     </div>
   </div>
 
@@ -63,6 +153,7 @@
     const loadingIndicator = document.getElementById('loading');
     const noResultsMessage = document.getElementById('no-results');
     const filterButtons = document.querySelectorAll('.filter-btn');
+    const resetFilterButton = document.getElementById('reset-filter');
     
     // Current active filter
     let activeFilter = null;
@@ -71,15 +162,15 @@
     function setActiveFilter(filterId) {
       // Reset all buttons
       filterButtons.forEach(btn => {
-        btn.classList.remove('bg-blue-600', 'text-white');
-        btn.classList.add('bg-gray-200', 'text-gray-800');
+        btn.classList.remove('bg-indigo-600', 'text-white');
+        btn.classList.add('bg-gray-100', 'text-gray-800');
       });
       
       // Set active button
       const activeButton = document.getElementById(filterId);
       if (activeButton) {
-        activeButton.classList.remove('bg-gray-200', 'text-gray-800');
-        activeButton.classList.add('bg-blue-600', 'text-white');
+        activeButton.classList.remove('bg-gray-100', 'text-gray-800');
+        activeButton.classList.add('bg-indigo-600', 'text-white');
       }
     }
     
@@ -118,8 +209,12 @@
         console.error('Error fetching trending articles:', error);
         loadingIndicator.classList.add('hidden');
         articlesContainer.innerHTML = `
-          <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            Error loading articles: ${error.message}
+          <div class="bg-red-50 border border-red-200 text-red-700 px-6 py-8 rounded-xl text-center">
+            <div class="bg-red-100 rounded-full p-3 inline-block mb-4">
+              <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">Error Loading Articles</h3>
+            <p>${error.message}</p>
           </div>
         `;
       }
@@ -129,23 +224,73 @@
     function displayArticles(articles) {
       articlesContainer.innerHTML = '';
       
-      articles.forEach(article => {
+      articles.forEach((article, index) => {
         const date = new Date(article.created_at);
-        const formattedDate = date.toLocaleString();
+        const formattedDate = date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        // Generate a random sentiment score for demo purposes
+        const randomSentiment = Math.random();
+        let sentimentClass, sentimentIcon, sentimentText;
+        
+        if (randomSentiment > 0.7) {
+          sentimentClass = "text-green-600 bg-green-50";
+          sentimentIcon = "fa-thumbs-up";
+          sentimentText = "Positive";
+        } else if (randomSentiment > 0.3) {
+          sentimentClass = "text-yellow-600 bg-yellow-50";
+          sentimentIcon = "fa-balance-scale";
+          sentimentText = "Neutral";
+        } else {
+          sentimentClass = "text-red-600 bg-red-50";
+          sentimentIcon = "fa-thumbs-down";
+          sentimentText = "Negative";
+        }
         
         const articleElement = document.createElement('div');
-        articleElement.className = 'bg-white rounded-lg shadow-md p-6 mb-4';
+        articleElement.className = 'bg-white rounded-xl shadow-md p-6 card-hover border border-gray-100';
+        
         articleElement.innerHTML = `
-          <div class="flex justify-between items-start">
-            <h3 class="text-xl font-semibold mb-2">${article.title}</h3>
-            <span class="text-sm text-gray-500 ml-2">
-              ${article.ticker}
-            </span>
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="text-xl font-bold text-gray-900 mb-2">${article.title}</h3>
+              <div class="flex items-center">
+                <span class="ticker-badge bg-indigo-100 text-indigo-800 mr-3">
+                  ${article.ticker}
+                </span>
+                <span class="article-date text-sm text-gray-500">
+                  ${formattedDate}
+                </span>
+              </div>
+            </div>
+            <div>
+              <span class="ticker-badge ${sentimentClass}">
+                <i class="fas ${sentimentIcon} mr-1"></i> ${sentimentText}
+              </span>
+            </div>
           </div>
-          <p class="text-gray-600 mb-4">${article.summary}</p>
-          <div class="text-gray-800 mb-4">${article.body}</div>
-          <div class="text-sm text-gray-500">
-            Published: ${formattedDate}
+          
+          <div class="bg-indigo-50 rounded-lg p-4 mb-4">
+            <p class="text-indigo-900">${article.summary}</p>
+          </div>
+          
+          <div class="text-gray-700 mb-4">
+            <p>${article.body}</p>
+          </div>
+          
+          <div class="border-t border-gray-100 pt-4 mt-4 flex justify-between items-center">
+            <a href="/detail?ticker=${article.ticker}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm flex items-center">
+              <i class="fas fa-chart-line mr-2"></i>
+              View Full Analysis
+            </a>
+            <div class="text-sm text-gray-500">
+              ID: ${article.id.substring(0, 8)}...
+            </div>
           </div>
         `;
         
@@ -172,6 +317,12 @@
     document.getElementById('filter-30d').addEventListener('click', () => {
       setActiveFilter('filter-30d');
       fetchTrendingArticles('30d');
+    });
+    
+    // Reset filter button
+    resetFilterButton.addEventListener('click', () => {
+      setActiveFilter('filter-all');
+      fetchTrendingArticles();
     });
     
     // Fetch all articles on page load

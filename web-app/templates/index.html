@@ -5,144 +5,216 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Stock Sentiment Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <style>
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .animate-pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    .bg-gradient {
+      background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+    }
+    
+    .card-hover {
+      transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .btn-gradient {
+      background: linear-gradient(90deg, #4f46e5 0%, #3b82f6 100%);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-gradient:hover {
+      background: linear-gradient(90deg, #4338ca 0%, #2563eb 100%);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-50 min-h-screen">
   <div class="container mx-auto px-4 py-8">
     <!-- Header with Navigation -->
     <header class="mb-8">
       <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold">📈 Stock Sentiment</h1>
+        <h1 class="text-3xl font-bold flex items-center">
+          <span class="text-indigo-600 mr-2">📈</span>
+          <span>Stock Sentiment</span>
+        </h1>
         <nav>
           <ul class="flex space-x-6">
-            <li><a href="/" class="text-blue-600 hover:text-blue-800 font-bold border-b-2 border-blue-600">Home</a></li>
-            <li><a href="/trending" class="text-blue-600 hover:text-blue-800">Trending</a></li>
+            <li><a href="/" class="text-indigo-600 hover:text-indigo-800 font-bold border-b-2 border-indigo-600">Home</a></li>
+            <li><a href="/trending" class="text-indigo-600 hover:text-indigo-800">Trending</a></li>
           </ul>
         </nav>
       </div>
     </header>
     
-    <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
-      <form id="ticker-form" class="flex gap-2 mb-4">
-        <input
-          type="text"
-          id="ticker-input"
-          placeholder="Enter ticker (e.g., TSLA)"
-          class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+    <!-- Hero Section -->
+    <div class="bg-gradient text-white rounded-xl shadow-lg p-8 mb-8">
+      <div class="flex flex-col md:flex-row items-center">
+        <div class="md:w-3/5 mb-6 md:mb-0 md:pr-8">
+          <h2 class="text-3xl md:text-4xl font-bold mb-4">AI-Powered Stock Sentiment Analysis</h2>
+          <p class="text-lg opacity-90 mb-6">Get instant sentiment analysis on any stock based on latest news and market trends.</p>
+          <div class="flex items-center text-sm">
+            <div class="bg-white bg-opacity-20 rounded-lg px-3 py-1 flex items-center mr-4">
+              <i class="fas fa-bolt mr-2"></i>
+              <span>Real-time Analysis</span>
+            </div>
+            <div class="bg-white bg-opacity-20 rounded-lg px-3 py-1 flex items-center">
+              <i class="fas fa-chart-line mr-2"></i>
+              <span>Market Insights</span>
+            </div>
+          </div>
+        </div>
+        <div class="md:w-2/5 flex justify-center">
+          <div class="bg-white bg-opacity-10 rounded-2xl p-6 backdrop-blur-sm">
+            <i class="fas fa-chart-pie text-8xl opacity-80"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Analysis Form Card -->
+    <div class="bg-white rounded-xl shadow-lg p-8 mb-8 card-hover">
+      <h2 class="text-2xl font-semibold mb-6 text-center text-gray-800">
+        <i class="fas fa-search-dollar mr-2 text-indigo-600"></i>
+        Analyze Any Stock
+      </h2>
+      
+      <form id="ticker-form" class="mb-6">
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <i class="fas fa-tag text-gray-400"></i>
+          </div>
+          <input
+            type="text"
+            id="ticker-input"
+            placeholder="Enter ticker symbol (e.g., TSLA, AAPL, AMZN)"
+            class="w-full pl-12 pr-4 py-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+          />
+        </div>
         <button
           type="submit"
-          class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          id="analyze-btn"
+          class="mt-4 w-full btn-gradient text-white py-4 rounded-lg font-medium flex items-center justify-center"
         >
-          Analyze
+          <i class="fas fa-chart-bar mr-2"></i>
+          Analyze Sentiment
         </button>
       </form>
       
-      <!-- Connectivity Check -->
-      <button
-        id="check-btn"
-        class="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600 mb-4"
-      >
-        Check Connectivity
-      </button>
-      <div id="health-status" class="text-center text-gray-700 mb-4"></div>
-
-      <div id="loading" class="text-center hidden">
-        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
-        <p class="text-gray-500">Analyzing ticker data...</p>
+      <div class="text-center text-sm text-gray-600 mb-6">
+        <i class="fas fa-info-circle mr-1 text-indigo-500"></i>
+        Our AI will analyze the latest news and trends for your selected stock
       </div>
       
+      <!-- Loading State -->
+      <div id="loading" class="text-center hidden">
+        <div class="inline-block animate-spin rounded-full h-10 w-10 border-[3px] border-indigo-600 border-t-transparent mb-4"></div>
+        <p class="text-gray-600">Initiating analysis. Please wait...</p>
+      </div>
+      
+      <!-- Status Message -->
       <div id="status-message" class="text-center text-gray-700 mb-4 hidden"></div>
-      <div id="results" class="space-y-4"></div>
+      
+      <!-- Connectivity Check -->
+      <div class="mt-8 pt-6 border-t border-gray-200">
+        <button
+          id="check-btn"
+          class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg text-sm flex items-center justify-center transition-colors duration-200"
+        >
+          <i class="fas fa-server mr-2 text-indigo-500"></i>
+          Check System Status
+        </button>
+        <div id="health-status" class="text-center text-gray-600 mt-2 text-sm"></div>
+      </div>
     </div>
+    
+    <!-- Features Section -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+        <div class="flex items-center mb-4">
+          <div class="bg-indigo-100 rounded-full p-3 mr-4">
+            <i class="fas fa-robot text-indigo-600 text-xl"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-800">AI Processing</h3>
+        </div>
+        <p class="text-gray-600">Advanced algorithms analyze market sentiment from multiple sources.</p>
+      </div>
+      
+      <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+        <div class="flex items-center mb-4">
+          <div class="bg-indigo-100 rounded-full p-3 mr-4">
+            <i class="fas fa-bolt text-indigo-600 text-xl"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-800">Real-time Data</h3>
+        </div>
+        <p class="text-gray-600">Get up-to-date analyses based on the latest market information.</p>
+      </div>
+      
+      <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+        <div class="flex items-center mb-4">
+          <div class="bg-indigo-100 rounded-full p-3 mr-4">
+            <i class="fas fa-globe text-indigo-600 text-xl"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-800">Global Coverage</h3>
+        </div>
+        <p class="text-gray-600">Track sentiment for stocks from markets around the world.</p>
+      </div>
+    </div>
+    
+    <!-- Recent Analysis Section -->
+    <div class="bg-white rounded-xl shadow-lg p-8">
+      <div class="flex items-center mb-6">
+        <div class="bg-indigo-100 rounded-full p-3 mr-4">
+          <i class="fas fa-history text-indigo-600 text-xl"></i>
+        </div>
+        <h2 class="text-xl font-semibold text-gray-800">Recent Analyses</h2>
+      </div>
+      <p class="text-gray-600 mb-6">
+        Want to see what others are analyzing? Check out our trending page to view the most recent stock analyses.
+      </p>
+      <a href="/trending" class="inline-block bg-gradient text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity duration-200">
+        <i class="fas fa-chart-line mr-2"></i>
+        View Trending Stocks
+      </a>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="mt-12 text-center text-gray-500 text-sm">
+      <p>© 2023 Stock Sentiment. All data is for informational purposes only.</p>
+    </footer>
   </div>
 
   <script>
     const form = document.getElementById('ticker-form');
     const input = document.getElementById('ticker-input');
-    const resultsDiv = document.getElementById('results');
+    const analyzeBtn = document.getElementById('analyze-btn');
     const loadingDiv = document.getElementById('loading');
     const statusMessageDiv = document.getElementById('status-message');
     const checkBtn = document.getElementById('check-btn');
     const healthDiv = document.getElementById('health-status');
     
-    // Store the active polling ticker and interval
-    let activeTicker = null;
-    let pollingInterval = null;
-    const POLLING_DELAY = 2000; // 2 seconds
-    
-    // Function to stop polling
-    const stopPolling = () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-        pollingInterval = null;
-      }
-    };
-    
-    // Function to poll for articles for a specific ticker
-    const pollForArticles = async (ticker) => {
-      try {
-        const resp = await fetch(`/articles/${ticker}`);
-        if (!resp.ok) throw new Error(`Status ${resp.status}`);
-        
-        const data = await resp.json();
-        
-        // If we have articles, display them and stop polling
-        if (data.articles && data.articles.length > 0) {
-          displayArticles(data.articles);
-          loadingDiv.classList.add('hidden');
-          stopPolling();
-        }
-      } catch (err) {
-        statusMessageDiv.textContent = `Error fetching articles: ${err.message}`;
-        statusMessageDiv.classList.remove('hidden');
-        stopPolling();
-      }
-    };
-    
-    // Function to display articles
-    const displayArticles = (articles) => {
-      resultsDiv.innerHTML = '';
-      
-      articles.forEach(article => {
-        const articleEl = document.createElement('div');
-        articleEl.className = 'bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4';
-        
-        articleEl.innerHTML = `
-          <h2 class="text-xl font-semibold mb-2">${article.title}</h2>
-          <p class="text-gray-600 mb-3">${article.summary}</p>
-          <div class="text-gray-800">${article.body}</div>
-          <div class="mt-3 text-xs text-gray-500">Created: ${new Date(article.created_at).toLocaleString()}</div>
-        `;
-        
-        resultsDiv.appendChild(articleEl);
-      });
-    };
-
-    checkBtn.addEventListener('click', async () => {
-      healthDiv.textContent = 'Checking connectivity…';
-      try {
-        const resp = await fetch('/healthz');
-        if (!resp.ok) throw new Error(`Status ${resp.status}`);
-        const data = await resp.json();
-        healthDiv.textContent = `Status: ${data.status}, MongoDB: ${data.mongo}, ML Service: ${data.ml_service.status || 'unknown'}`;
-      } catch (err) {
-        healthDiv.textContent = `Error: ${err.message}`;
-      }
-    });
-
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const ticker = input.value.trim().toUpperCase();
       if (!ticker) return;
       
-      // Clear previous results and messages
-      resultsDiv.innerHTML = '';
+      // Reset UI state
       statusMessageDiv.classList.add('hidden');
       
-      // Stop any ongoing polling
-      stopPolling();
-      
-      // Show loading spinner
+      // Disable form elements and show loading
+      input.disabled = true;
+      analyzeBtn.disabled = true;
+      analyzeBtn.classList.add('opacity-70');
       loadingDiv.classList.remove('hidden');
       
       try {
@@ -155,21 +227,38 @@
         
         const data = await resp.json();
         
-        // Show status message
+        // Show status message briefly
         statusMessageDiv.textContent = data.message;
         statusMessageDiv.classList.remove('hidden');
         
-        // Set the active ticker and start polling
-        activeTicker = ticker;
-        pollingInterval = setInterval(() => pollForArticles(ticker), POLLING_DELAY);
-        
-        // Start polling immediately as well
-        pollForArticles(ticker);
+        // Redirect to detail page
+        if (data.redirect_to) {
+          setTimeout(() => {
+            window.location.href = data.redirect_to;
+          }, 500);
+        }
         
       } catch (err) {
         loadingDiv.classList.add('hidden');
         statusMessageDiv.textContent = `Error: ${err.message}`;
         statusMessageDiv.classList.remove('hidden');
+        
+        // Re-enable form
+        input.disabled = false;
+        analyzeBtn.disabled = false;
+        analyzeBtn.classList.remove('opacity-70');
+      }
+    });
+
+    checkBtn.addEventListener('click', async () => {
+      healthDiv.textContent = 'Checking system status...';
+      try {
+        const resp = await fetch('/healthz');
+        if (!resp.ok) throw new Error(`Status ${resp.status}`);
+        const data = await resp.json();
+        healthDiv.textContent = `Status: ${data.status}, MongoDB: ${data.mongo}, ML Service: ${data.ml_service.status || 'unknown'}`;
+      } catch (err) {
+        healthDiv.textContent = `Error: ${err.message}`;
       }
     });
   </script>

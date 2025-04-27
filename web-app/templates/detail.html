@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stock Analysis - Stock Sentiment</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <style>
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .animate-pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    .article-card {
+      transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    }
+    
+    .article-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .bg-gradient {
+      background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+    }
+    
+    .ticker-badge {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-weight: bold;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="container mx-auto px-4 py-8">
+    <!-- Header with Navigation -->
+    <header class="mb-8">
+      <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold flex items-center">
+          <span class="text-indigo-600 mr-2">📈</span>
+          <span>Stock Sentiment</span>
+        </h1>
+        <nav>
+          <ul class="flex space-x-6">
+            <li><a href="/" class="text-indigo-600 hover:text-indigo-800">Home</a></li>
+            <li><a href="/trending" class="text-indigo-600 hover:text-indigo-800">Trending</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Ticker Header -->
+    <div class="bg-gradient text-white rounded-lg shadow-lg p-6 mb-8">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-4xl font-bold" id="ticker-symbol">Loading...</h2>
+          <p class="text-lg opacity-90" id="ticker-description">Fetching latest analysis...</p>
+        </div>
+        <div class="text-right">
+          <div class="text-lg">Analysis Date</div>
+          <div class="text-2xl font-semibold" id="analysis-date">-</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading-state" class="py-12">
+      <div class="max-w-xl mx-auto bg-white rounded-lg shadow-md p-8 text-center">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">Analyzing Stock Data</h3>
+        <p class="text-gray-600">Please wait while our AI processes the latest information about this stock...</p>
+        <div class="mt-6 h-2 bg-gray-200 rounded-full">
+          <div id="progress-bar" class="h-2 bg-indigo-600 rounded-full animate-pulse" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Articles Container -->
+    <div id="articles-container" class="grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
+      <!-- Cards will be populated by JavaScript -->
+    </div>
+    
+    <!-- Error State -->
+    <div id="error-state" class="max-w-xl mx-auto bg-red-50 rounded-lg shadow-md p-8 hidden">
+      <div class="flex items-center mb-4">
+        <div class="flex-shrink-0 bg-red-100 rounded-full p-3">
+          <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+        </div>
+        <h3 class="ml-4 text-xl font-semibold text-red-800">Analysis Failed</h3>
+      </div>
+      <p id="error-message" class="text-red-700">An error occurred while analyzing this stock.</p>
+      <a href="/" class="inline-block mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Back to Home</a>
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const loadingState = document.getElementById('loading-state');
+    const articlesContainer = document.getElementById('articles-container');
+    const errorState = document.getElementById('error-state');
+    const errorMessage = document.getElementById('error-message');
+    const tickerSymbol = document.getElementById('ticker-symbol');
+    const tickerDescription = document.getElementById('ticker-description');
+    const analysisDate = document.getElementById('analysis-date');
+    const progressBar = document.getElementById('progress-bar');
+    
+    // Get ticker from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const ticker = urlParams.get('ticker');
+    
+    if (!ticker) {
+      showError('No ticker symbol provided');
+    } else {
+      // Set ticker in header
+      tickerSymbol.textContent = ticker.toUpperCase();
+      
+      // Start polling for results
+      startProgressBar();
+      pollForArticles(ticker);
+    }
+    
+    function startProgressBar() {
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 5;
+        progressBar.style.width = `${Math.min(progress, 95)}%`;
+        
+        if (progress >= 100) {
+          clearInterval(interval);
+        }
+      }, 500);
+    }
+    
+    async function pollForArticles(ticker) {
+      let attempts = 0;
+      const maxAttempts = 30; // 30 attempts at 1s intervals = 30s maximum wait
+      
+      const pollInterval = setInterval(async () => {
+        attempts++;
+        
+        try {
+          const response = await fetch(`/articles/${ticker}`);
+          if (!response.ok) throw new Error(`Status: ${response.status}`);
+          
+          const data = await response.json();
+          
+          if (data.articles && data.articles.length > 0) {
+            // Articles found, show them
+            clearInterval(pollInterval);
+            displayArticles(data.ticker, data.articles);
+          } else if (attempts >= maxAttempts) {
+            // Timeout reached
+            clearInterval(pollInterval);
+            showError('Analysis timed out. Please try again later.');
+          }
+        } catch (error) {
+          console.error('Error polling for articles:', error);
+          clearInterval(pollInterval);
+          showError(`Failed to get analysis results: ${error.message}`);
+        }
+      }, 1000);
+    }
+    
+    function displayArticles(ticker, articles) {
+      // Show articles container
+      loadingState.classList.add('hidden');
+      articlesContainer.classList.remove('hidden');
+      
+      // Set ticker info
+      tickerDescription.textContent = `Latest Analysis Results (${articles.length} articles)`;
+      
+      // Set analysis date
+      if (articles.length > 0 && articles[0].created_at) {
+        const date = new Date(articles[0].created_at);
+        analysisDate.textContent = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      }
+      
+      // Render articles
+      articles.forEach((article, index) => {
+        const card = document.createElement('div');
+        card.className = 'article-card bg-white rounded-lg shadow-md overflow-hidden relative';
+        
+        // Format date
+        const date = new Date(article.created_at);
+        const formattedDate = date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+        
+        card.innerHTML = `
+          <div class="ticker-badge bg-indigo-600 text-white">
+            ${ticker}
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold text-gray-900 mb-3">${article.title}</h3>
+            <div class="flex items-center text-sm text-gray-600 mb-4">
+              <i class="fas fa-calendar-alt mr-2"></i>
+              ${formattedDate}
+            </div>
+            <div class="bg-indigo-50 rounded-lg p-4 mb-4">
+              <p class="text-indigo-900 font-medium">${article.summary}</p>
+            </div>
+            <div class="text-gray-700 leading-relaxed mb-4">
+              ${article.body}
+            </div>
+            <div class="border-t border-gray-200 pt-4 mt-4">
+              <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-500">
+                  <i class="fas fa-chart-line mr-1"></i> Sentiment Analysis
+                </div>
+                <div class="flex items-center">
+                  <i class="fas fa-thumbs-up text-green-500 mr-1"></i>
+                  <span class="text-green-700 font-medium">Positive</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        articlesContainer.appendChild(card);
+      });
+    }
+    
+    function showError(message) {
+      loadingState.classList.add('hidden');
+      errorState.classList.remove('hidden');
+      articlesContainer.classList.add('hidden');
+      errorMessage.textContent = message;
+    }
+  </script>
+</body>
+</html> 
