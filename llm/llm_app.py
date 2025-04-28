@@ -7,10 +7,14 @@ import time
 from typing import Dict
 from fastapi.responses import JSONResponse
 
+from langchain_google_genai import ChatGoogleGenerativeAI
+
 app = FastAPI()
 conn = MongoDBConnection()
 # Use the articles collection instead of sentiments
 articles_collection = conn.get_collection("articles")
+
+
 
 @app.post("/analyze/{ticker}")
 async def analyze(ticker: str) -> Dict:

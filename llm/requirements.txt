@@ -1,0 +1,14 @@
+# ml/requirements.txt
+fastapi
+uvicorn
+pymongo
+openai
+langchain
+pytest
+pytest-cov
+typing
+langchain-google-genai
+langchain-core
+langgraph
+pydantic
+requests

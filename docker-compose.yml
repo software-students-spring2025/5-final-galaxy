@@ -1,5 +1,5 @@
 # docker-compose.yml
-version: '3.8'
+version: '3.11'
 
 services:
   web:
@@ -12,15 +12,15 @@ services:
     environment:
       - PYTHONPATH=/app:/app/common
       - MONGO_URI=mongodb://mongodb:27017/mydb
-      - ML_SERVICE_URL=http://ml:5002
+      - LLM_SERVICE_URL=http://llm:5002
     depends_on:
       mongodb:
         condition: service_healthy
-      ml:
+      llm:
         condition: service_started
 
-  ml:
-    build: ./ml
+  llm:
+    build: ./llm
     ports:
       - "5002:5002"
     volumes:
