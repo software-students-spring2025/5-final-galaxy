@@ -1,4 +1,4 @@
-name: ml CI/CD
+name: llm CI/CD
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
 
       - name: Install deps
         run: |
-          pip install -r ml/requirements.txt
+          pip install -r llm/requirements.txt
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -27,8 +27,8 @@ jobs:
       - name: Build image (CI only)
         uses: docker/build-push-action@v3
         with:
-          context: ./ml
-          file: ./ml/Dockerfile
+          context: ./llm
+          file: ./llm/Dockerfile
           push: false
 
   deploy:
@@ -44,13 +44,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build & push ml
+      - name: Build & push llm
         uses: docker/build-push-action@v3
         with:
-          context: ./ml
-          file: ./ml/Dockerfile
+          context: ./llm
+          file: ./llm/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/stock-ml:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/stock-ml:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/stock-llm:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/stock-llm:${{ github.sha }}
 
