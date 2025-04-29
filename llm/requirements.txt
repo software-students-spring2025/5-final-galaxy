@@ -8,7 +8,9 @@ pytest
 pytest-cov
 typing
 langchain-google-genai
+langchain-openai
 langchain-core
 langgraph
 pydantic
 requests
+dotenv

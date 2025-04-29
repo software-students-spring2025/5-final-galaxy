@@ -66,6 +66,15 @@
       height: 220px;
       width: 100%;
     }
+
+    .sentiment-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -622,22 +631,39 @@
           minute: '2-digit'
         });
         
-        // Generate a random sentiment score for demo purposes
-        const randomSentiment = Math.random();
-        let sentimentClass, sentimentIcon, sentimentText;
-        
-        if (randomSentiment > 0.7) {
-          sentimentClass = "text-green-600 bg-green-50";
-          sentimentIcon = "fa-thumbs-up";
-          sentimentText = "Positive";
-        } else if (randomSentiment > 0.3) {
-          sentimentClass = "text-yellow-600 bg-yellow-50";
-          sentimentIcon = "fa-balance-scale";
-          sentimentText = "Neutral";
-        } else {
-          sentimentClass = "text-red-600 bg-red-50";
-          sentimentIcon = "fa-thumbs-down";
-          sentimentText = "Negative";
+        // Determine overall sentiment, icon, and color based on article.overall_sentiment (copied from detail.html)
+        let overallSentimentText = article.overall_sentiment || 'Neutral'; // Get text from data or default
+        let sentimentIcon = 'fa-minus-circle'; // Default icon
+        let sentimentColor = 'bg-gray-100 text-gray-800'; // Default color
+
+        switch (overallSentimentText.toLowerCase()) {
+            case 'positive':
+            case 'bullish':
+                sentimentIcon = 'fa-thumbs-up';
+                sentimentColor = 'bg-green-100 text-green-800';
+                break;
+            case 'negative':
+            case 'bearish':
+                sentimentIcon = 'fa-thumbs-down';
+                sentimentColor = 'bg-red-100 text-red-800';
+                break;
+            case 'slightly bullish':
+                sentimentIcon = 'fa-arrow-trend-up';
+                sentimentColor = 'bg-cyan-100 text-cyan-800';
+                break;
+            case 'slightly bearish':
+                sentimentIcon = 'fa-arrow-trend-down';
+                sentimentColor = 'bg-orange-100 text-orange-800';
+                break;
+            case 'neutral':
+                sentimentIcon = 'fa-minus-circle';
+                sentimentColor = 'bg-gray-100 text-gray-800';
+                break;
+            default: // Keep default for unknown values
+                overallSentimentText = 'Unknown'; // Clarify if sentiment is not recognized
+                sentimentIcon = 'fa-question-circle'; 
+                sentimentColor = 'bg-gray-100 text-gray-800';
+                break;
         }
         
         const articleElement = document.createElement('div');
@@ -646,30 +672,25 @@
         articleElement.innerHTML = `
           <div class="flex justify-between items-start mb-4">
             <div>
-              <h3 class="text-xl font-bold text-gray-900 mb-2">${article.title}</h3>
+              <h3 class="text-xl font-bold text-gray-900 mb-2">${article.title || article.ticker || 'Untitled Article'}</h3>
               <div class="flex items-center">
-                <span class="ticker-badge bg-indigo-100 text-indigo-800 mr-3">
-                  ${article.ticker}
-                </span>
+                <!-- Ticker badge removed -->
                 <span class="article-date text-sm text-gray-500">
                   ${formattedDate}
                 </span>
               </div>
             </div>
-            <div>
-              <span class="ticker-badge ${sentimentClass}">
-                <i class="fas ${sentimentIcon} mr-1"></i> ${sentimentText}
-              </span>
+            <!-- Use sentiment badge style from detail.html and make it fully rounded -->
+            <div class="sentiment-badge ${sentimentColor} rounded-full">
+                <i class="fas ${sentimentIcon}"></i>
+                ${overallSentimentText}
             </div>
           </div>
           
           <div class="bg-indigo-50 rounded-lg p-4 mb-4">
-            <p class="text-indigo-900">${article.summary}</p>
+            <p class="text-indigo-900">${article.summary || 'No summary provided.'}</p>
           </div>
           
-          <div class="text-gray-700 mb-4">
-            <p>${article.body}</p>
-          </div>
           
           <div class="border-t border-gray-100 pt-4 mt-4 flex justify-between items-center">
             <a href="/detail?ticker=${article.ticker}" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm flex items-center">

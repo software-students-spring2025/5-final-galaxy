@@ -1,13 +1,12 @@
-# ml/ml_app.py
+# llm/llm_app.py
+import logging
 from fastapi import FastAPI, HTTPException
 from common.models import MongoDBConnection, ArticleModel
 from pymongo.errors import PyMongoError
-import os
-import time
 from typing import Dict
 from fastapi.responses import JSONResponse
-
-from langchain_google_genai import ChatGoogleGenerativeAI
+from agent import analyze_news
+from datetime import datetime
 
 app = FastAPI()
 conn = MongoDBConnection()
@@ -20,53 +19,37 @@ articles_collection = conn.get_collection("articles")
 async def analyze(ticker: str) -> Dict:
     """
     Process an analysis request for a stock ticker.
-    Includes a 10 second delay to simulate processing time.
+    Saves the result to the database and returns a 202 status.
     """
     try:
-        # Sleep for 10 seconds to simulate processing time
-        time.sleep(10)
+        raw_result = analyze_news(ticker)
+        result = raw_result['structured_response'].model_dump()
+        logging.info(f"result from analyze_news: {result}")
+
+
+        article_data = ArticleModel.create_article(ticker, result['overall_sentiment'], result['summary'], result['analysis'])
         
-        # Hardcoded data for demonstration purposes
-        hardcoded_articles = [
-            {
-                "title": f"{ticker} Shows Strong Growth Potential",
-                "summary": f"Analysts are optimistic about {ticker}'s future performance based on recent financial results.",
-                "body": f"In a recent report, market analysts highlighted that {ticker} has demonstrated exceptional growth potential in the last quarter. The company reported earnings that exceeded expectations by 15%, driven primarily by their new product line and expansion into emerging markets. Experts predict continued growth through the next fiscal year."
-            },
-            {
-                "title": f"New Strategic Partnership Boosts {ticker} Stock",
-                "summary": f"{ticker} announced a major partnership that could significantly increase market share.",
-                "body": f"{ticker} has entered into a strategic partnership with a leading technology provider, which is expected to enhance their product offerings and expand their customer base. This collaboration aims to integrate cutting-edge technologies into {ticker}'s existing solutions, potentially disrupting the current market landscape. Investors responded positively to this announcement, with the stock price rising by 7% following the news."
-            }
-        ]
-        
-        # Insert each hardcoded article into the database
-        inserted_ids = []
-        for article_data in hardcoded_articles:
-            article = ArticleModel.create_article(
-                ticker=ticker,
-                title=article_data["title"],
-                summary=article_data["summary"],
-                body=article_data["body"]
-            )
-            result = articles_collection.insert_one(article)
-            inserted_ids.append(str(result.inserted_id))
-        
-        # Return a simple confirmation with article IDs
+        # Insert the article into the database
+        insert_result = articles_collection.insert_one(article_data)
+        if not insert_result.inserted_id:
+             raise HTTPException(status_code=500, detail="Failed to insert article into database.")
+
+        # Return a 202 Accepted response indicating the task is queued/processing
         return JSONResponse(
             status_code=202,
             content={
-                "status": "completed", 
-                "message": f"Analysis for {ticker} is complete",
+                "status": "queued", 
+                "message": f"Analysis for {ticker} initiated.",
                 "ticker": ticker,
-                "article_count": len(inserted_ids),
-                "article_ids": inserted_ids
+                # Removed summary and analysis from the response
             }
         )
         
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     except Exception as e:
+        # Log the specific exception before raising the HTTP error
+        logging.error(f"Unexpected error processing {ticker}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
 
 

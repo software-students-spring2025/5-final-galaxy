@@ -37,15 +37,15 @@ class ArticleModel:
     Class for handling article data stored in MongoDB
     """
     @staticmethod
-    def create_article(ticker: str, title: str, summary: str, body: str) -> dict:
+    def create_article(ticker: str, overall_sentiment: str, summary: str, analysis: str) -> dict:
         """
         Create a new article document
         """
         article = {
             "ticker": ticker.upper(),
-            "title": title,
             "summary": summary,
-            "body": body,
+            "analysis": analysis,
+            "overall_sentiment": overall_sentiment,
             "created_at": datetime.utcnow()
         }
         return article

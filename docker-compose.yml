@@ -7,8 +7,19 @@ services:
     ports:
       - "5001:5001"
     volumes:
-      - shared_data:/app/data
-      - ./common:/app/common
+      # --- ADDED THIS LINE ---
+      # Mount the local web-app code directory into /app in the container
+      - ./web-app:/app
+      # --------------------
+      - shared_data:/app/data # Keep this for shared generated data
+      - ./common:/app/common  # Keep this for the common code module
+      # --- Optional: Uncomment if needed ---
+      # If you install dependencies into a virtual env inside the image (e.g., /app/venv)
+      # and want to prevent the host mount from hiding it, uncomment the line below.
+      # - /app/venv
+      # To prevent host __pycache__ etc. from appearing (less common issue), you could add:
+      # - /app/__pycache__
+      # ---------------------------------
     environment:
       - PYTHONPATH=/app:/app/common
       - MONGO_URI=mongodb://mongodb:27017/mydb
@@ -18,28 +29,42 @@ services:
         condition: service_healthy
       llm:
         condition: service_started
+    command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5001", "--reload"] # Example for FastAPI/Uvicorn
+    # -----------------------------------
 
   llm:
     build: ./llm
     ports:
       - "5002:5002"
     volumes:
-      - shared_data:/app/data
-      - ./common:/app/common
+      # --- ADDED THIS LINE ---
+      # Mount the local llm code directory into /app in the container
+      - ./llm:/app
+      # --------------------
+      - shared_data:/app/data # Keep this for shared generated data
+      - ./common:/app/common  # Keep this for the common code module
+      # --- Optional: Uncomment if needed (similar to web service) ---
+      # - /app/venv
+      # - /app/__pycache__
+      # ---------------------------------
     environment:
       - PYTHONPATH=/app:/app/common
       - MONGO_URI=mongodb://mongodb:27017/mydb
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - API_PROVIDER=${API_PROVIDER}
     depends_on:
       mongodb:
         condition: service_healthy
+    command: ["uvicorn", "llm_app:app", "--host", "0.0.0.0", "--port", "5002", "--reload"] # Example for FastAPI/Uvicorn
+    # -----------------------------------
 
   mongodb:
     image: mongo:latest
     ports:
       - "27017:27017"
     volumes:
-      - mongo_data:/data/db
+      - mongo_data:/data/db # Use named volume for DB data persistence
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 5s
@@ -47,5 +72,5 @@ services:
       retries: 5
 
 volumes:
-  mongo_data:
-  shared_data:
+  mongo_data: # Persists MongoDB data between runs
+  shared_data: # Persists shared data between web/llm runs
