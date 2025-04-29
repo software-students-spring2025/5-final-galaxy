@@ -1,6 +1,7 @@
 import pytest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
+from unittest.mock import patch
 from common.models import ArticleModel, MongoDBConnection
 from bson import ObjectId
 

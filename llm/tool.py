@@ -1,7 +1,7 @@
 from langchain_core.tools import tool
 from typing import List
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 # Setup API endpoints
