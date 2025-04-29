@@ -10,6 +10,12 @@ In this project, we build a stock analysis dashboard. Key features include:
 1.  **LLM-Powered Sentiment Analysis:** Enter any stock symbol to retrieve recent news articles associated with it. Our integrated Large Language Model (LLM) analyzes these articles to provide insightful sentiment analysis, offering a deeper understanding beyond raw numbers.
 2.  **TradingView Integration:** We've embedded interactive widgets from TradingView to display real-time stock prices and general market information for the queried symbols, keeping you informed on current performance.
 
+## Deployment
+
+Link to the deployed web app: [Stock Sentiment Web App](http://129.212.132.49:5001/)
+
+*Note: The web app is deployed on a Digital Ocean Droplet.*
+
 ## Docker Hub Images
 
 -   **Web App:** [Link to Web App Docker Hub Image](https://hub.docker.com/r/zzxxchen/stock-sentiment-web)
