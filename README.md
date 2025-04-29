@@ -12,8 +12,8 @@ In this project, we build a stock analysis dashboard. Key features include:
 
 ## Docker Hub Images
 
--   **Web App:** [Link to Web App Docker Hub Image](https://hub.docker.com/repository/docker/zzxxchen/stock-sentiment-web/general)
--   **LLM Service:** [Link to LLM Service Docker Hub Image](https://hub.docker.com/repository/docker/zzxxchen/stock-sentiment-llm/general)
+-   **Web App:** [Link to Web App Docker Hub Image](https://hub.docker.com/r/zzxxchen/stock-sentiment-web)
+-   **LLM Service:** [Link to LLM Service Docker Hub Image](https://hub.docker.com/r/zzxxchen/stock-sentiment-llm)
 
 ## Team Members
 
