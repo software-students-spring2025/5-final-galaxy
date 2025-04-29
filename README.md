@@ -12,9 +12,8 @@ In this project, we build a stock analysis dashboard. Key features include:
 
 ## Docker Hub Images
 
--   **Web App:** [Link to Web App Docker Hub Image](https://hub.docker.com/r/YOUR_DOCKERHUB_USERNAME/YOUR_WEB_APP_IMAGE)
--   **LLM Service:** [Link to LLM Service Docker Hub Image](https://hub.docker.com/r/YOUR_DOCKERHUB_USERNAME/YOUR_LLM_SERVICE_IMAGE)
-<!-- TODO: Replace YOUR_DOCKERHUB_USERNAME and image names with your actual Docker Hub details -->
+-   **Web App:** [Link to Web App Docker Hub Image](https://hub.docker.com/repository/docker/zzxxchen/stock-sentiment-web/general)
+-   **LLM Service:** [Link to LLM Service Docker Hub Image](https://hub.docker.com/repository/docker/zzxxchen/stock-sentiment-llm/general)
 
 ## Team Members
 
