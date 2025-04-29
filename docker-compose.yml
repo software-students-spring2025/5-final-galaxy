@@ -34,7 +34,8 @@ services:
       - MONGO_URI=${MONGO_URI}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - API_PROVIDER=${API_PROVIDER}
+      - XAI_API_KEY=${XAI_API_KEY}
+      - LLM_API_PROVIDER=${LLM_API_PROVIDER}
     depends_on:
       mongodb:
         condition: service_healthy

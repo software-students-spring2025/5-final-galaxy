@@ -14,6 +14,8 @@ conn = MongoDBConnection()
 articles_collection = conn.get_collection("articles")
 
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 @app.post("/analyze/{ticker}")
 async def analyze(ticker: str) -> Dict:

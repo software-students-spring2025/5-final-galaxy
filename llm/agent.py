@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 import logging
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
+from langchain_xai import ChatXAI
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.prebuilt import create_react_agent
 from tool import ticker_news_tool
@@ -11,22 +12,40 @@ import logging
 
 load_dotenv()
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 class NewsAnalysis(BaseModel):
     ticker: str = Field(description="the ticker symbol of the company")
     overall_sentiment: str = Field(description="overall sentiment of the news, should be one of the following: Bearish, Neutral, Bullish")
     summary: str = Field(description="summary of all the news, should be concise and to the point")
     analysis: str = Field(description="The analysis of the news and sentiment score for each news article. Structured with chart in markdown format.")
-API_PROVIDER = os.getenv("API_PROVIDER", "OPENAI")
+    
+
+API_PROVIDER = os.getenv("LLM_API_PROVIDER")
+if not API_PROVIDER:
+    raise ValueError("API_PROVIDER is not set")
+API_KEY = os.getenv(f"{API_PROVIDER}_API_KEY")
+if not API_KEY:
+    raise ValueError(f"{API_PROVIDER}_API_KEY is not set")
+
+logging.info(f"API_PROVIDER: {API_PROVIDER}")
 
 if API_PROVIDER == "GEMINI":
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.5-flash-preview-04-17",
-        api_key=os.getenv("GEMINI_API_KEY"),
+        api_key=API_KEY,
+        temperature=0.0
     )
 elif API_PROVIDER == "OPENAI":
     llm = ChatOpenAI(
         model="gpt-4.1-mini",
-        api_key=os.getenv("OPENAI_API_KEY"),
+        api_key=API_KEY,
+        temperature=0.0
+    )
+elif API_PROVIDER == "XAI":
+    llm = ChatXAI(
+        model="grok-3-fast-beta",
+        api_key=API_KEY,
+        temperature=0.0
     )
 else:
     raise ValueError(f"Invalid API provider {API_PROVIDER}")
@@ -69,18 +88,20 @@ You should provide a concise summary of the news for the ticker. two to three se
 
 ### Guidelines about response format for analysis part
 You should strictly provide your response in markdown format.
+You should only focus and analyze the news for the ticker queried by the user. Do not include any other ticker in your response.
 You should strictly use the time provided by the tool for each news item. Provide time in year-month-day hour:minute format.
 You need to include the following item for each news:
 - Time (year-month-day hour:minute)
 - Headline (headline of the news)
-- Sentiment (Strongly Bearish, Bearish, Slightly Bearish, Neutral, Slightly Bullish, Bullish, Strongly Bullish)
+- Sentiment (has to be one of the following: Strongly Bearish, Bearish, Slightly Bearish, Neutral, Slightly Bullish, Bullish, Strongly Bullish)
 - Reason (reason for the sentiment)
-- Source (source of the news)
+- Source (source of the news) if not provided, use "Unknown"
 Always use markdown table formatting correctly: 
     ```
     | Header 1 | Header 2 | Header 3 |
     |----------|----------|----------|
     | Data 1   | Data 2   | Data 3   |
+    ```
 """
 
 prompt = ChatPromptTemplate.from_messages([
