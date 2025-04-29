@@ -1,17 +1,22 @@
 import os
 from pydantic import BaseModel, Field
+import logging
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.prebuilt import create_react_agent
 from tool import ticker_news_tool
+from dotenv import load_dotenv
+import logging
+
+load_dotenv()
 
 class NewsAnalysis(BaseModel):
     ticker: str = Field(description="the ticker symbol of the company")
+    overall_sentiment: str = Field(description="overall sentiment of the news, should be one of the following: Bearish, Neutral, Bullish")
     summary: str = Field(description="summary of all the news, should be concise and to the point")
     analysis: str = Field(description="The analysis of the news and sentiment score for each news article. Structured with chart in markdown format.")
-API_PROVIDER = os.getenv("API_PROVIDER")
-print(f"API_PROVIDER: {API_PROVIDER}")
+API_PROVIDER = os.getenv("API_PROVIDER", "OPENAI")
 
 if API_PROVIDER == "GEMINI":
     llm = ChatGoogleGenerativeAI(
@@ -20,11 +25,11 @@ if API_PROVIDER == "GEMINI":
     )
 elif API_PROVIDER == "OPENAI":
     llm = ChatOpenAI(
-        model="gpt-4.1",
+        model="gpt-4.1-mini",
         api_key=os.getenv("OPENAI_API_KEY"),
     )
 else:
-    raise ValueError("Invalid API provider")
+    raise ValueError(f"Invalid API provider {API_PROVIDER}")
 
 
 system_prompt = """
@@ -54,6 +59,10 @@ For **each** news item in the provided list:
 ### Guidelines about ticker
 if user provided a company name instead of ticker, you should infer the ticker from the company name. You should never ask the user back for comfirmation.
 if ticker provided is Market or you are unsure about which ticker to use, you should use get_curated_news_tool to general market news
+
+### Guidelines about overall sentiment part
+You should provide the overall sentiment of the news for the ticker, the overall sentiment should be one of the following: Bearish, Neutral, Bullish.
+
 
 ### Guidelines about summary part
 You should provide a concise summary of the news for the ticker. two to three sentences.
@@ -88,6 +97,13 @@ agent = create_react_agent(
 )
 
 def analyze_news(ticker: str):
-    messages = prompt.invoke({"system_prompt": system_prompt, "ticker": ticker})
-    analysis = agent.invoke(messages)
-    return analysis
+    try:
+        messages = prompt.invoke({"system_prompt": system_prompt, "ticker": ticker})
+        analysis = agent.invoke(messages)
+        logging.info(f"Successfully analyzed ticker: {ticker}") 
+        return analysis
+    except Exception as e:
+        logging.error(f"Error analyzing ticker {ticker}: {e}", exc_info=True) 
+        raise 
+
+
