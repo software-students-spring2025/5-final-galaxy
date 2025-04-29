@@ -6,6 +6,10 @@
   <title>Stock Analysis - Stock Sentiment</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <!-- Add Marked.js for Markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- TradingView Widget Script-->
+  <script src="https://s3.tradingview.com/tv.js"></script>
   <style>
     @keyframes pulse {
       0%, 100% { opacity: 1; }
@@ -15,65 +19,176 @@
       animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
     
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f5f5f7;
+    }
+    
+    .container {
+      max-width: 1200px;
+    }
+    
     .article-card {
-      transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+      transition: all 0.3s ease;
+      border-radius: 16px;
+      overflow: hidden;
+      background-color: white;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     }
     
     .article-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
     }
     
     .bg-gradient {
       background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+      border-radius: 16px;
     }
     
-    .ticker-badge {
-      position: absolute;
-      top: -10px;
-      right: -10px;
+    /* Custom styles for the analysis table */
+    .analysis-table table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      font-size: 0.875rem; /* text-sm */
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .analysis-table th, 
+    .analysis-table td {
+      border: 1px solid #e5e7eb; /* border-gray-200 */
+      padding: 0.75rem 1rem;    /* py-3 px-4 */
+      text-align: left;
+      vertical-align: top; /* Align content to top */
+    }
+    .analysis-table th {
+      background-color: #f9fafb; /* bg-gray-50 */
+      font-weight: 600; /* font-semibold */
+      color: #374151; /* text-gray-700 */
+    }
+    .analysis-table tbody tr:nth-child(even) {
+      background-color: #f9fafb; /* bg-gray-50 */
+    }
+    .analysis-table p { /* Prevent extra margins inside table cells */
+      margin: 0;
+    }
+    
+    .widget-container {
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      margin-bottom: 1.5rem;
+    }
+    
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1d1d1f;
+      margin-bottom: 0.75rem;
+    }
+    
+    .header-container {
+      /* background-color: white; */ /* Removed */
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      margin-bottom: 2rem;
+    }
+    
+    .nav-link {
+      /* color: #4f46e5; */ /* Removed */
+      font-weight: 500;
+      transition: all 0.2s;
+      padding: 0.5rem 1rem;
+      border-radius: 12px;
+    }
+    
+    .nav-link:hover {
+      background-color: #f5f5f7;
+      color: #3730a3;
+    }
+    
+    .sentiment-badge {
       padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
-      font-weight: bold;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      border-radius: 12px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .section-card {
+      background-color: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+    
+    .symbol-info-container {
+      background-color: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      margin-bottom: 1.5rem;
+    }
+    
+    .analysis-date {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-top: 0.5rem;
+      text-align: right;
+    }
+    
+    .analysis-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .analysis-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1d1d1f;
     }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body>
   <div class="container mx-auto px-4 py-8">
     <!-- Header with Navigation -->
-    <header class="mb-8">
+    <header class="header-container bg-gradient text-white">
       <div class="flex justify-between items-center">
         <h1 class="text-3xl font-bold flex items-center">
-          <span class="text-indigo-600 mr-2">📈</span>
+          <span class=" mr-2">📈</span> <!-- Removed text-indigo-600 -->
           <span>Stock Sentiment</span>
         </h1>
         <nav>
-          <ul class="flex space-x-6">
-            <li><a href="/" class="text-indigo-600 hover:text-indigo-800">Home</a></li>
-            <li><a href="/trending" class="text-indigo-600 hover:text-indigo-800">Trending</a></li>
+          <ul class="flex space-x-4">
+            <li><a href="/" class="nav-link text-white hover:bg-white/20">Home</a></li> <!-- Added text-white and hover style -->
+            <li><a href="/trending" class="nav-link text-white hover:bg-white/20">Trending</a></li> <!-- Added text-white and hover style -->
           </ul>
         </nav>
       </div>
     </header>
 
-    <!-- Ticker Header -->
-    <div class="bg-gradient text-white rounded-lg shadow-lg p-6 mb-8">
-      <div class="flex justify-between items-center">
-        <div>
-          <h2 class="text-4xl font-bold" id="ticker-symbol">Loading...</h2>
-          <p class="text-lg opacity-90" id="ticker-description">Fetching latest analysis...</p>
-        </div>
-        <div class="text-right">
-          <div class="text-lg">Analysis Date</div>
-          <div class="text-2xl font-semibold" id="analysis-date">-</div>
-        </div>
+    <!-- Symbol Info Widget (replacing the blue header) -->
+    <div class="symbol-info-container" id="symbol-info-container">
+      <!-- TradingView Widget BEGIN -->
+      <div class="tradingview-widget-container">
+        <div class="tradingview-widget-container__widget"></div>
+        <div class="tradingview-widget-copyright">
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-info.js" async>
+        // Configuration will be dynamically inserted here by JavaScript
+        </script>
       </div>
+      <!-- TradingView Widget END -->
     </div>
-
+    
     <!-- Loading State -->
     <div id="loading-state" class="py-12">
-      <div class="max-w-xl mx-auto bg-white rounded-lg shadow-md p-8 text-center">
+      <div class="max-w-xl mx-auto bg-white rounded-2xl shadow-md p-8 text-center">
         <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
         <h3 class="text-xl font-semibold text-gray-800 mb-2">Analyzing Stock Data</h3>
         <p class="text-gray-600">Please wait while our AI processes the latest information about this stock...</p>
@@ -83,13 +198,13 @@
       </div>
     </div>
 
-    <!-- Articles Container -->
-    <div id="articles-container" class="grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
+    <!-- Articles Container - Made full width and centered with 1 column -->
+    <div id="articles-container" class="hidden max-w-full mx-auto">
       <!-- Cards will be populated by JavaScript -->
     </div>
     
     <!-- Error State -->
-    <div id="error-state" class="max-w-xl mx-auto bg-red-50 rounded-lg shadow-md p-8 hidden">
+    <div id="error-state" class="max-w-xl mx-auto bg-red-50 rounded-2xl shadow-md p-8 hidden">
       <div class="flex items-center mb-4">
         <div class="flex-shrink-0 bg-red-100 rounded-full p-3">
           <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
@@ -97,7 +212,7 @@
         <h3 class="ml-4 text-xl font-semibold text-red-800">Analysis Failed</h3>
       </div>
       <p id="error-message" class="text-red-700">An error occurred while analyzing this stock.</p>
-      <a href="/" class="inline-block mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Back to Home</a>
+      <a href="/" class="inline-block mt-4 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700">Back to Home</a>
     </div>
   </div>
 
@@ -107,9 +222,6 @@
     const articlesContainer = document.getElementById('articles-container');
     const errorState = document.getElementById('error-state');
     const errorMessage = document.getElementById('error-message');
-    const tickerSymbol = document.getElementById('ticker-symbol');
-    const tickerDescription = document.getElementById('ticker-description');
-    const analysisDate = document.getElementById('analysis-date');
     const progressBar = document.getElementById('progress-bar');
     
     // Get ticker from URL
@@ -119,12 +231,33 @@
     if (!ticker) {
       showError('No ticker symbol provided');
     } else {
-      // Set ticker in header
-      tickerSymbol.textContent = ticker.toUpperCase();
-      
+      // Dynamically insert the ticker into the Symbol Info widget config
+      setSymbolInfoWidgetTicker(ticker);
+
       // Start polling for results
       startProgressBar();
       pollForArticles(ticker);
+    }
+    
+    function setSymbolInfoWidgetTicker(ticker) {
+      const scriptElement = document.querySelector('#symbol-info-container script');
+      if (scriptElement) {
+        const config = {
+          "symbol": ticker,
+          "width": "100%",
+          "locale": "en",
+          "colorTheme": "light",
+          "isTransparent": true,
+          "fontFamily": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+        };
+        scriptElement.innerHTML = JSON.stringify(config, null, 2);
+      } else {
+        console.error("Could not find the TradingView widget script element to update.");
+         document.getElementById('symbol-info-container').innerHTML =
+            `<div class="p-4 bg-yellow-50 text-yellow-800 rounded-xl">
+              Error configuring company information widget.
+            </div>`;
+      }
     }
     
     function startProgressBar() {
@@ -141,7 +274,7 @@
     
     async function pollForArticles(ticker) {
       let attempts = 0;
-      const maxAttempts = 30; // 30 attempts at 1s intervals = 30s maximum wait
+      const maxAttempts = 30;
       
       const pollInterval = setInterval(async () => {
         attempts++;
@@ -174,19 +307,10 @@
       loadingState.classList.add('hidden');
       articlesContainer.classList.remove('hidden');
       
-      // Set ticker info
-      tickerDescription.textContent = `Latest Analysis Results (${articles.length} articles)`;
       
-      // Set analysis date
-      if (articles.length > 0 && articles[0].created_at) {
-        const date = new Date(articles[0].created_at);
-        analysisDate.textContent = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-      }
-      
-      // Render articles
       articles.forEach((article, index) => {
         const card = document.createElement('div');
-        card.className = 'article-card bg-white rounded-lg shadow-md overflow-hidden relative';
+        card.className = 'article-card mb-6';
         
         // Format date
         const date = new Date(article.created_at);
@@ -196,31 +320,68 @@
           day: 'numeric'
         });
         
+        // Determine overall sentiment, icon, and color based on article.overall_sentiment
+        let overallSentimentText = article.overall_sentiment || 'Neutral'; // Get text from data or default
+        let sentimentIcon = 'fa-minus-circle'; // Default icon
+        let sentimentColor = 'bg-gray-100 text-gray-800'; // Default color
+
+        switch (overallSentimentText.toLowerCase()) {
+            case 'positive':
+            case 'bullish':
+                sentimentIcon = 'fa-thumbs-up';
+                sentimentColor = 'bg-green-100 text-green-800';
+                break;
+            case 'negative':
+            case 'bearish':
+                sentimentIcon = 'fa-thumbs-down';
+                sentimentColor = 'bg-red-100 text-red-800';
+                break;
+            case 'slightly bullish':
+                sentimentIcon = 'fa-arrow-trend-up';
+                sentimentColor = 'bg-cyan-100 text-cyan-800';
+                break;
+            case 'slightly bearish':
+                sentimentIcon = 'fa-arrow-trend-down';
+                sentimentColor = 'bg-orange-100 text-orange-800';
+                break;
+            case 'neutral':
+                sentimentIcon = 'fa-minus-circle';
+                sentimentColor = 'bg-gray-100 text-gray-800';
+                break;
+            default: // Keep default for unknown values
+                overallSentimentText = 'Unknown'; // Clarify if sentiment is not recognized
+                sentimentIcon = 'fa-question-circle'; 
+                sentimentColor = 'bg-gray-100 text-gray-800';
+                break;
+        }
+
         card.innerHTML = `
-          <div class="ticker-badge bg-indigo-600 text-white">
-            ${ticker}
-          </div>
           <div class="p-6">
-            <h3 class="text-xl font-bold text-gray-900 mb-3">${article.title}</h3>
-            <div class="flex items-center text-sm text-gray-600 mb-4">
-              <i class="fas fa-calendar-alt mr-2"></i>
-              ${formattedDate}
+            <div class="flex items-center justify-between text-sm text-gray-500 mb-4">
+              <!-- Date on the left -->
+              <div class="flex items-center">
+                  <i class="far fa-calendar-alt mr-2"></i>
+                  <span>${formattedDate}</span>
+              </div>
+              <!-- Sentiment Badge on the right -->
+              <div class="sentiment-badge ${sentimentColor}">
+                  <i class="fas ${sentimentIcon}"></i>
+                  ${overallSentimentText}
+              </div>
             </div>
-            <div class="bg-indigo-50 rounded-lg p-4 mb-4">
-              <p class="text-indigo-900 font-medium">${article.summary}</p>
+            
+            <!-- Display Summary -->
+            <div class="mb-4">
+              <h4 class="font-semibold text-gray-700 mb-2">Summary:</h4>
+              <p class="text-gray-700">${article.summary || 'No summary available.'}</p>
             </div>
-            <div class="text-gray-700 leading-relaxed mb-4">
-              ${article.body}
-            </div>
-            <div class="border-t border-gray-200 pt-4 mt-4">
-              <div class="flex justify-between items-center">
-                <div class="text-sm text-gray-500">
-                  <i class="fas fa-chart-line mr-1"></i> Sentiment Analysis
-                </div>
-                <div class="flex items-center">
-                  <i class="fas fa-thumbs-up text-green-500 mr-1"></i>
-                  <span class="text-green-700 font-medium">Positive</span>
-                </div>
+            
+            <!-- Display Analysis (Rendered Markdown) -->
+            <div class="mb-4">
+              <h4 class="font-semibold text-gray-700 mb-2">Detailed Analysis:</h4>
+              <!-- Apply custom class for styling the table inside -->
+              <div class="analysis-table text-gray-800" id="analysis-${index}">
+                ${article.analysis ? marked.parse(article.analysis) : 'No analysis available.'}
               </div>
             </div>
           </div>
@@ -228,6 +389,44 @@
         
         articlesContainer.appendChild(card);
       });
+      
+      // After rendering all articles, add the TradingView chart widget at the bottom
+      const widgetContainer = document.createElement('div');
+      widgetContainer.className = 'section-card mb-6';
+      widgetContainer.innerHTML = `
+        <h3 class="section-title">Price Chart</h3>
+        <div id="tradingview-widget-container" style="height: 400px;"></div>
+      `;
+      articlesContainer.appendChild(widgetContainer);
+      
+      // Initialize TradingView chart widget
+      setTimeout(() => {
+        try {
+          new TradingView.widget({
+                "width": "100%",
+            "height": 400,
+            "symbol": ticker,
+            "interval": "D",
+            "timezone": "exchange",
+            "theme": "light",
+            "style": "1",
+                "locale": "en",
+            "toolbar_bg": "#f1f3f6",
+            "enable_publishing": false,
+            "hide_top_toolbar": false,
+            "hide_legend": false,
+            "save_image": false,
+            "container_id": "tradingview-widget-container"
+          });
+          console.log("TradingView chart widget initialized for ticker:", ticker);
+        } catch (e) {
+          console.error("Failed to initialize TradingView chart widget:", e);
+          document.getElementById('tradingview-widget-container').innerHTML = 
+                    `<div class="p-4 bg-yellow-50 text-yellow-800 rounded-xl">
+              Unable to load chart. Please refresh the page to try again.
+                    </div>`;
+             }
+      }, 500);
     }
     
     function showError(message) {

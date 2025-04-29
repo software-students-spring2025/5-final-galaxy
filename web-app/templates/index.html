@@ -171,22 +171,41 @@
       </div>
     </div>
     
-    <!-- Recent Analysis Section -->
-    <div class="bg-white rounded-xl shadow-lg p-8">
-      <div class="flex items-center mb-6">
-        <div class="bg-indigo-100 rounded-full p-3 mr-4">
-          <i class="fas fa-history text-indigo-600 text-xl"></i>
+    <!-- Market Heatmap Section -->
+    <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+        <div class="flex items-center mb-6">
+            <div class="bg-indigo-100 rounded-full p-3 mr-4">
+                <i class="fas fa-fire text-indigo-600 text-xl"></i>
+            </div>
+            <h2 class="text-xl font-semibold text-gray-800">Market Heatmap</h2>
         </div>
-        <h2 class="text-xl font-semibold text-gray-800">Recent Analyses</h2>
-      </div>
-      <p class="text-gray-600 mb-6">
-        Want to see what others are analyzing? Check out our trending page to view the most recent stock analyses.
-      </p>
-      <a href="/trending" class="inline-block bg-gradient text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity duration-200">
-        <i class="fas fa-chart-line mr-2"></i>
-        View Trending Stocks
-      </a>
+        <!-- TradingView Widget BEGIN -->
+        <div class="tradingview-widget-container">
+            <div class="tradingview-widget-container__widget"></div>
+            <div class="tradingview-widget-copyright">
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>
+            {
+            "exchanges": [],
+            "dataSource": "SPX500",
+            "grouping": "sector",
+            "blockSize": "market_cap_basic",
+            "blockColor": "change",
+            "locale": "en",
+            "symbolUrl": "",
+            "colorTheme": "light",
+            "hasTopBar": false,
+            "isDataSetEnabled": false,
+            "isZoomEnabled": true,
+            "hasSymbolTooltip": true,
+            "isMonoSize": false,
+            "width": "100%",
+            "height": "600"
+            }
+            </script>
+        </div>
+        <!-- TradingView Widget END -->
     </div>
+    
     
     <!-- Footer -->
     <footer class="mt-12 text-center text-gray-500 text-sm">
@@ -256,7 +275,7 @@
         const resp = await fetch('/healthz');
         if (!resp.ok) throw new Error(`Status ${resp.status}`);
         const data = await resp.json();
-        healthDiv.textContent = `Status: ${data.status}, MongoDB: ${data.mongo}, ML Service: ${data.ml_service.status || 'unknown'}`;
+        healthDiv.textContent = `Status: ${data.status}, MongoDB: ${data.mongo}, LLM Service: ${data.llm_service.status || 'unknown'}`;
       } catch (err) {
         healthDiv.textContent = `Error: ${err.message}`;
       }

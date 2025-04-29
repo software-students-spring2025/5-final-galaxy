@@ -12,7 +12,7 @@ app = FastAPI()
 # Tell FastAPI where templates are
 templates = Jinja2Templates(directory="templates")
 
-ML_URL = os.getenv("ML_SERVICE_URL", "http://ml:5002")
+LLM_URL = os.getenv("LLM_SERVICE_URL", "http://llm:5002")
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://mongodb:27017/mydb")
 
 # Initialize MongoDB connection
@@ -53,9 +53,9 @@ async def trigger_analysis(ticker: str):
     """
     try:
         # Send the analysis request to the ML service
-        resp = requests.post(f"{ML_URL}/analyze/{ticker}")
+        resp = requests.post(f"{LLM_URL}/analyze/{ticker}")
         if resp.status_code != 202:
-            raise HTTPException(status_code=502, detail="ML service error")
+            raise HTTPException(status_code=502, detail="LLM service error")
         
         # Return the status message and ticker for redirection
         return {
@@ -65,7 +65,7 @@ async def trigger_analysis(ticker: str):
             "redirect_to": f"/detail?ticker={ticker}"
         }
     except requests.RequestException as e:
-        raise HTTPException(status_code=502, detail=f"ML service request failed: {str(e)}")
+        raise HTTPException(status_code=502, detail=f"LLM service request failed: {str(e)}")
 
 @app.get("/articles/{ticker}")
 async def get_articles(ticker: str):
@@ -113,10 +113,10 @@ async def get_trending_articles(time_range: Optional[str] = Query(None, descript
 @app.get("/healthz")
 async def healthz():
     try:
-        # Check ML service health
-        ml_resp = requests.get(f"{ML_URL}/healthz", timeout=3)
-        ml_resp.raise_for_status()
-        ml_status = ml_resp.json()
+        # Check LLM service health
+        llm_resp = requests.get(f"{LLM_URL}/healthz", timeout=3)
+        llm_resp.raise_for_status()
+        llm_status = llm_resp.json()
         
         # Check database connectivity
         conn._client.admin.command("ping")
@@ -124,11 +124,13 @@ async def healthz():
         return {
             "status": "ok", 
             "mongo": "reachable", 
-            "ml_service": ml_status
+            "llm_service": llm_status
         }
     except requests.RequestException:
-        return {"status": "degraded", "mongo": "reachable", "ml_service": "unreachable"}
+        # Return consistent structure for llm_service
+        return {"status": "degraded", "mongo": "reachable", "llm_service": {"status": "unreachable"}}
     except PyMongoError:
-        return {"status": "degraded", "mongo": "unreachable", "ml_service": "unknown"}
+        # Return consistent structure for llm_service
+        return {"status": "degraded", "mongo": "unreachable", "llm_service": {"status": "unknown"}}
 
 
