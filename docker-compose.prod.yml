@@ -1,0 +1,36 @@
+services:
+  web:
+    image: $DOCKERHUB_USERNAME/stock-web:latest
+    restart: always
+    ports:
+      - "80:5001"  # Changed to standard HTTP port
+    env_file:
+      - .env.production
+    depends_on:
+      - llm
+      - mongodb
+
+  llm:
+    image: $DOCKERHUB_USERNAME/stock-llm:latest
+    restart: always
+    env_file:
+      - .env.production
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:latest
+    restart: always
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: $MONGO_USER
+      MONGO_INITDB_ROOT_PASSWORD: $MONGO_PASSWORD
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongo_data:
