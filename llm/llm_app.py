@@ -5,7 +5,7 @@ from common.models import MongoDBConnection, ArticleModel
 from pymongo.errors import PyMongoError
 from typing import Dict
 from fastapi.responses import JSONResponse
-from agent import analyze_news
+from llm.agent import analyze_news
 from datetime import datetime
 
 app = FastAPI()
