@@ -3,7 +3,7 @@ Module for MongoDB models & connection.
 """
 
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pymongo import MongoClient, ASCENDING, DESCENDING
 from pymongo.collection import Collection
 from pymongo.database import Database
@@ -67,9 +67,11 @@ class ArticleModel:
             article["id"] = str(article["_id"])
             del article["_id"]
             
-        # Format datetime to ISO string for JSON serialization
+        # Format datetime to ISO string with UTC indicator for JSON serialization
         if "created_at" in article and isinstance(article["created_at"], datetime):
-            article["created_at"] = article["created_at"].isoformat()
+            # Ensure the datetime is UTC-aware before formatting
+            utc_dt = article["created_at"].replace(tzinfo=timezone.utc)
+            article["created_at"] = utc_dt.isoformat()
             
         return article
         

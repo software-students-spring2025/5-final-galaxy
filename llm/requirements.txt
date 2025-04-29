@@ -9,6 +9,7 @@ pytest-cov
 typing
 langchain-google-genai
 langchain-openai
+langchain-xai
 langchain-core
 langgraph
 pydantic

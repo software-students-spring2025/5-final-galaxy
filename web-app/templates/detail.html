@@ -198,7 +198,7 @@
       </div>
     </div>
 
-    <!-- Articles Container - Made full width and centered with 1 column -->
+    <!-- Articles Container  -->
     <div id="articles-container" class="hidden max-w-full mx-auto">
       <!-- Cards will be populated by JavaScript -->
     </div>
@@ -312,18 +312,24 @@
         const card = document.createElement('div');
         card.className = 'article-card mb-6';
         
-        // Format date
+        // Format date to US Eastern Time (ET)
         const date = new Date(article.created_at);
-        const formattedDate = date.toLocaleDateString('en-US', {
+        const options = {
+          timeZone: 'America/New_York',
           year: 'numeric',
           month: 'short',
-          day: 'numeric'
-        });
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+          timeZoneName: 'short'
+        };
+        const formattedDate = date.toLocaleString('en-US', options);
         
         // Determine overall sentiment, icon, and color based on article.overall_sentiment
-        let overallSentimentText = article.overall_sentiment || 'Neutral'; // Get text from data or default
-        let sentimentIcon = 'fa-minus-circle'; // Default icon
-        let sentimentColor = 'bg-gray-100 text-gray-800'; // Default color
+        let overallSentimentText = article.overall_sentiment || 'Neutral';
+        let sentimentIcon = 'fa-minus-circle';
+        let sentimentColor = 'bg-gray-100 text-gray-800';
 
         switch (overallSentimentText.toLowerCase()) {
             case 'positive':

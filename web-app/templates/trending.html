@@ -623,18 +623,23 @@
       
       articles.forEach((article, index) => {
         const date = new Date(article.created_at);
-        const formattedDate = date.toLocaleDateString('en-US', {
+        // Format date to US Eastern Time (ET)
+        const options = {
+          timeZone: 'America/New_York',
           year: 'numeric',
           month: 'short',
-          day: 'numeric',
+          day: '2-digit',
           hour: '2-digit',
-          minute: '2-digit'
-        });
-        
-        // Determine overall sentiment, icon, and color based on article.overall_sentiment (copied from detail.html)
-        let overallSentimentText = article.overall_sentiment || 'Neutral'; // Get text from data or default
-        let sentimentIcon = 'fa-minus-circle'; // Default icon
-        let sentimentColor = 'bg-gray-100 text-gray-800'; // Default color
+          minute: '2-digit',
+          hour12: true,
+          timeZoneName: 'short'
+        };
+        const formattedDate = date.toLocaleString('en-US', options);
+
+        // Determine overall sentiment, icon, and color based on article.overall_sentiment
+        let overallSentimentText = article.overall_sentiment || 'Neutral';
+        let sentimentIcon = 'fa-minus-circle';
+        let sentimentColor = 'bg-gray-100 text-gray-800';
 
         switch (overallSentimentText.toLowerCase()) {
             case 'positive':
