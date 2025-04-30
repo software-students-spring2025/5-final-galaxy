@@ -49,5 +49,5 @@ class TestToolFunctions:
         tool = next(t for t in ticker_news_tool if t.name == tool_func)
         with patch(f'llm.tool.{tool_func.split("_tool")[0]}') as mock:
             mock.return_value = {"test": "data"}
-            result = tool.run(arg) if arg else tool.run()
+            result = tool.run(arg if arg is not None else {})
             assert isinstance(result, dict)
