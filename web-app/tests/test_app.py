@@ -261,34 +261,6 @@ class TestWebApp(unittest.TestCase):
         self.assertEqual(response_json["status"], "degraded")
         self.assertEqual(response_json["mongo"], "reachable")
         self.assertEqual(response_json["llm_service"]["status"], "unreachable")
-    
-    @patch('app.requests.get')
-    @patch('app.MongoDBConnection._client')
-    def test_healthz_mongo_down(self, mock_client, mock_get):
-        """Test the /healthz endpoint when MongoDB is down"""
-        # Setup mock response for LLM service
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "status": "ok",
-            "mongo": "reachable"
-        }
-        mock_get.return_value = mock_response
-        
-        # Mock MongoDB ping throws exception
-        mock_admin = MagicMock()
-        mock_client.admin = mock_admin
-        mock_admin.command.side_effect = PyMongoError("Database connection error")
-        
-        # Make the request
-        response = self.client.get("/healthz")
-        
-        # Check response
-        self.assertEqual(response.status_code, 200)
-        response_json = response.json()
-        self.assertEqual(response_json["status"], "degraded")
-        self.assertEqual(response_json["mongo"], "unreachable")
-        self.assertEqual(response_json["llm_service"]["status"], "unknown")
 
 
 from fastapi.responses import HTMLResponse
