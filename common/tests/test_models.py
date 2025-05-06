@@ -45,7 +45,7 @@ class TestMongoDBConnection(unittest.TestCase):
     def test_connect_with_default_uri(self, mock_getenv, mock_mongo_client):
         """Test if _connect method uses default URI when environment variable is not set"""
         # Set up mock for os.getenv to return None for MONGO_URI but use the default
-        # 需要模拟os.getenv的默认值机制，而不是返回None
+        # Need to simulate os.getenv's default value mechanism, rather than returning None
         def getenv_side_effect(key, default=None):
             if key == "MONGO_URI":
                 return default

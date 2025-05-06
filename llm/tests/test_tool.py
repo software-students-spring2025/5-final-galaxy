@@ -5,9 +5,6 @@ from datetime import datetime
 import sys
 import os
 
-# Remove the sys.path manipulation that can cause issues with pytest
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 # Mock environment variables before imports
 with patch.dict(os.environ, {"LLM_API_PROVIDER": "GEMINI", "GEMINI_API_KEY": "fake_key"}):
     from llm.tool import (
@@ -238,13 +235,11 @@ class TestToolWrappers(unittest.TestCase):
         mock_get_ticker_news.return_value = {"stories": [{"headline": "Test ticker news"}]}
         
         # Call the function with run() directly instead of the tool wrapper
-        # 这里直接调用run方法而不是tool本身，避免callback问题
         result = get_ticker_news_tool.run({"ticker": "AAPL", "limit": 10})
         
         # Assert get_ticker_news was called with correct parameters
         mock_get_ticker_news.assert_called_once_with("AAPL", 10)
         
-        # 修改检查：工具返回的是Python对象而不是JSON字符串
         self.assertEqual(type(result), dict)
         self.assertIn("stories", result)
         self.assertEqual(result["stories"][0]["headline"], "Test ticker news")
@@ -261,7 +256,6 @@ class TestToolWrappers(unittest.TestCase):
         # Assert get_broad_ticker_news was called with correct parameters
         mock_get_broad_ticker_news.assert_called_once_with("AAPL", 10)
         
-        # 修改检查：工具返回的是Python对象而不是JSON字符串
         self.assertEqual(type(result), dict)
         self.assertIn("stories", result)
         self.assertEqual(result["stories"][0]["headline"], "Test broad ticker news")
@@ -278,7 +272,6 @@ class TestToolWrappers(unittest.TestCase):
         # Assert get_news_from_source was called with correct parameters
         mock_get_news_from_source.assert_called_once_with("bloomberg", 10)
         
-        # 修改检查：工具返回的是Python对象而不是JSON字符串
         self.assertEqual(type(result), dict)
         self.assertIn("stories", result)
         self.assertEqual(result["stories"][0]["headline"], "Test source news")
@@ -295,7 +288,6 @@ class TestToolWrappers(unittest.TestCase):
         # Assert get_news_for_multiple_tickers was called with correct parameters
         mock_get_news_for_multiple_tickers.assert_called_once_with(["AAPL", "MSFT"], 10)
         
-        # 修改检查：工具返回的是Python对象而不是JSON字符串
         self.assertEqual(type(result), dict)
         self.assertIn("stories", result)
         self.assertEqual(result["stories"][0]["headline"], "Test multiple tickers news")
@@ -312,7 +304,6 @@ class TestToolWrappers(unittest.TestCase):
         # Assert get_curated_news was called with correct parameters
         mock_get_curated_news.assert_called_once_with(10)
         
-        # 修改检查：工具返回的是Python对象而不是JSON字符串
         self.assertEqual(type(result), dict)
         self.assertIn("stories", result)
         self.assertEqual(result["stories"][0]["headline"], "Test curated news")
@@ -329,7 +320,6 @@ class TestToolWrappers(unittest.TestCase):
         # Assert get_entity_news was called with correct parameters
         mock_get_entity_news.assert_called_once_with("Elon Musk", 10)
         
-        # 修改检查：工具返回的是Python对象而不是JSON字符串
         self.assertEqual(type(result), dict)
         self.assertIn("stories", result)
         self.assertEqual(result["stories"][0]["headline"], "Test entity news")
@@ -346,7 +336,6 @@ class TestToolWrappers(unittest.TestCase):
         # Assert search_tickers was called with correct parameters
         mock_search_tickers.assert_called_once_with("Apple", 5)
         
-        # 修改检查：工具返回的是Python对象而不是JSON字符串
         self.assertEqual(type(result), dict)
         self.assertIn("tickers", result)
         self.assertEqual(result["tickers"][0]["symbol"], "AAPL")

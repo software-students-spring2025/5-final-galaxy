@@ -4,9 +4,6 @@ import sys
 import os
 import json
 
-# Remove the sys.path manipulation that can cause issues with pytest
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 # Mock environment variables before imports
 with patch.dict(os.environ, {"LLM_API_PROVIDER": "GEMINI", "GEMINI_API_KEY": "fake_key"}):
     # Use absolute imports instead
