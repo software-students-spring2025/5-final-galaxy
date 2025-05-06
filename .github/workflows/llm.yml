@@ -69,4 +69,3 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/stock-llm:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/stock-llm:${{ github.sha }}
-
