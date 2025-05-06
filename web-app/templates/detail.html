@@ -179,9 +179,7 @@
       <div class="tradingview-widget-container">
         <div class="tradingview-widget-container__widget"></div>
         <div class="tradingview-widget-copyright">
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-symbol-info.js" async>
-        // Configuration will be dynamically inserted here by JavaScript
-        </script>
+        </div>
       </div>
       <!-- TradingView Widget END -->
     </div>
@@ -240,23 +238,37 @@
     }
     
     function setSymbolInfoWidgetTicker(ticker) {
-      const scriptElement = document.querySelector('#symbol-info-container script');
-      if (scriptElement) {
-        const config = {
-          "symbol": ticker,
-          "width": "100%",
-          "locale": "en",
-          "colorTheme": "light",
-          "isTransparent": true,
-          "fontFamily": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-        };
-        scriptElement.innerHTML = JSON.stringify(config, null, 2);
+      const config = {
+        "symbol": ticker,
+        "width": "100%",
+        "locale": "en",
+        "colorTheme": "light",
+        "isTransparent": true,
+        "fontFamily": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+      };
+
+      const scriptContainer = document.querySelector('#symbol-info-container .tradingview-widget-copyright');
+      
+      if (scriptContainer) {
+        // Clear any existing script from the container
+        scriptContainer.innerHTML = ''; 
+        
+        const newScript = document.createElement('script');
+        newScript.type = 'text/javascript';
+        newScript.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-info.js';
+        newScript.async = true;
+        newScript.innerHTML = JSON.stringify(config, null, 2);
+        scriptContainer.appendChild(newScript);
       } else {
-        console.error("Could not find the TradingView widget script element to update.");
-         document.getElementById('symbol-info-container').innerHTML =
-            `<div class="p-4 bg-yellow-50 text-yellow-800 rounded-xl">
-              Error configuring company information widget.
-            </div>`;
+        console.error("Could not find the TradingView widget script container.");
+        // Fallback behavior if the container isn't found (though it should be)
+        const mainContainer = document.getElementById('symbol-info-container');
+        if (mainContainer) {
+            mainContainer.innerHTML =
+                `<div class="p-4 bg-yellow-50 text-yellow-800 rounded-xl">
+                  Error configuring company information widget (container issue).
+                </div>`;
+        }
       }
     }
     

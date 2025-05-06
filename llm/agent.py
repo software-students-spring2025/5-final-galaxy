@@ -37,7 +37,7 @@ if API_PROVIDER == "GEMINI":
     )
 elif API_PROVIDER == "OPENAI":
     llm = ChatOpenAI(
-        model="gpt-4.1-mini",
+        model="gpt-4.1",
         api_key=API_KEY,
         temperature=0.0
     )
