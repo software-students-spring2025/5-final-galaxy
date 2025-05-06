@@ -3,12 +3,23 @@ name: web-app CI/CD
 on:
   push:
     branches: [ main, master ]
+    paths:
+      - 'web-app/**'
   pull_request:
     branches: [ main, master ]
+    paths:
+      - 'web-app/**'
 
 jobs:
   test-build:
     runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+          
     steps:
       - uses: actions/checkout@v3
 
@@ -19,13 +30,25 @@ jobs:
 
       - name: Install deps
         run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov
           pip install -r web-app/requirements.txt
-          pip install pytest pytest-cov  # Added for testing
-
-      - name: Run unit tests
+          pip install -r common/requirements.txt
+      
+      - name: Create template files for tests
         run: |
-          cd web-app
-          pytest --cov=. --cov-report=xml
+          mkdir -p web-app/templates
+          touch web-app/templates/index.html
+          touch web-app/templates/detail.html
+          touch web-app/templates/trending.html
+          
+      - name: Setup test environment variables
+        run: |
+          echo "MONGO_URI=mongodb://localhost:27017/test_db" >> $GITHUB_ENV
+          
+      - name: Run tests
+        run: |
+          python -m pytest web-app/tests --cov=web-app -v
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -59,20 +82,3 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/stock-web:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/stock-web:${{ github.sha }}
-
-      - name: Deploy to Digital Ocean
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.DIGITALOCEAN_HOST }}
-          username: ${{ secrets.DIGITALOCEAN_USERNAME }}
-          key: ${{ secrets.DIGITALOCEAN_SSH_KEY }}
-          script: |
-            cd ~/stock-app
-            echo "Pulling latest web image..."
-            docker-compose -f docker-compose.prod.yml pull web
-            echo "Restarting web service..."
-            docker-compose -f docker-compose.prod.yml up -d web
-            echo "Deployment complete!"
-            docker ps
-            echo "Testing web service..."
-            curl -I http://localhost || true

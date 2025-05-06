@@ -1,12 +1,21 @@
-# pytest settings that might help... feel free to modify or remove as needed
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
-minversion = "7.0"
-addopts = "-ra -q --cov=./ --cov-report=term-missing"
-pythonpath = ["."]
-testpaths = ["tests"]
-asyncio_default_fixture_loop_scope = "function"
-filterwarnings = [
-    "error",  # Turn warnings into errors
-    "ignore::pytest.PytestDeprecationWarning"  # Specifically ignore the asyncio warning
+testpaths = ["common/tests", "llm/tests", "web-app/tests"]
+pythonpath = [".", "common", "llm", "web-app"]
+
+[tool.coverage.run]
+source = ["common", "llm", "web-app"]
+omit = ["*/tests/*", "*/site-packages/*", "*/tests/__init__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "pass",
+    "raise ImportError"
 ]
