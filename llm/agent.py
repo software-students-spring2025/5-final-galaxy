@@ -6,7 +6,7 @@ from langchain_openai import ChatOpenAI
 from langchain_xai import ChatXAI
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.prebuilt import create_react_agent
-from tool import ticker_news_tool
+from llm.tool import ticker_news_tool
 from dotenv import load_dotenv
 import logging
 
